@@ -11,7 +11,7 @@ export default function DashboardPage() {
       <div>
         <h1 className='text-3xl font-bold tracking-tight'>Dashboard</h1>
 
-        <p className='mt-2 text-muted-foreground'>
+        <p className='text-muted-foreground mt-2'>
           Organize your plans, focus on your tasks, and track your progress.
         </p>
       </div>
@@ -19,7 +19,7 @@ export default function DashboardPage() {
       <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
         <Card>
           <CardHeader>
-            <CardTitle className='text-sm font-medium text-muted-foreground'>
+            <CardTitle className='text-muted-foreground text-sm font-medium'>
               Today's Plans
             </CardTitle>
           </CardHeader>
@@ -31,7 +31,7 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className='text-sm font-medium text-muted-foreground'>
+            <CardTitle className='text-muted-foreground text-sm font-medium'>
               Completed Tasks
             </CardTitle>
           </CardHeader>
@@ -43,7 +43,7 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className='text-sm font-medium text-muted-foreground'>
+            <CardTitle className='text-muted-foreground text-sm font-medium'>
               Focused Time
             </CardTitle>
           </CardHeader>
@@ -55,7 +55,7 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle className='text-sm font-medium text-muted-foreground'>
+            <CardTitle className='text-muted-foreground text-sm font-medium'>
               Current Streak
             </CardTitle>
           </CardHeader>
@@ -72,7 +72,7 @@ export default function DashboardPage() {
         </CardHeader>
 
         <CardContent>
-          <p className='text-sm text-muted-foreground'>
+          <p className='text-muted-foreground text-sm'>
             You don't have any plans yet.
           </p>
         </CardContent>
@@ -84,7 +84,7 @@ export default function DashboardPage() {
         </CardHeader>
 
         <CardContent>
-          <p className='text-sm text-muted-foreground'>
+          <p className='text-muted-foreground text-sm'>
             Your productivity activity will appear here.
           </p>
         </CardContent>

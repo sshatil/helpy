@@ -17,7 +17,7 @@ const mainNavigation = [
   },
   {
     label: 'Study / Work',
-    to: '/study',
+    to: '/study/plans',
     icon: BookOpen,
   },
   {
@@ -59,7 +59,7 @@ function SidebarLink({
             <span>{label}</span>
 
             {isActive && (
-              <span className='ml-auto size-1.5 rounded-full bg-primary' />
+              <span className='bg-primary ml-auto size-1.5 rounded-full' />
             )}
           </>
         )}
@@ -70,7 +70,7 @@ function SidebarLink({
 
 export function AppSidebar() {
   return (
-    <aside className='flex h-screen w-64 shrink-0 flex-col border-r bg-background'>
+    <aside className='bg-background flex h-screen w-64 shrink-0 flex-col border-r'>
       <div className='flex h-16 items-center px-6'>
         <span className='text-lg font-semibold'>Productivity</span>
       </div>
