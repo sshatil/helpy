@@ -2,6 +2,7 @@ import { Badge } from '@repo/ui/components/ui/badge';
 import { Button } from '@repo/ui/components/ui/button';
 import { Task } from '../../lib/plans/types';
 import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
+import { EditTaskDialog } from './edit-task-dialog';
 
 type TaskProps = {
   task: Task;
@@ -76,7 +77,7 @@ export function TaskList({
             {task.completed ? 'Mark Incomplete' : 'Mark Complete'}
           </Button>
 
-          {/* <EditTaskDialog task={task} onUpdate={updateTask} /> */}
+          <EditTaskDialog task={task} onUpdate={updateTask} />
 
           <Button
             size='sm'
