@@ -4,6 +4,7 @@ import {
   createPlan as createStoredPlan,
   deletePlan as deleteStoredPlan,
   getPlans,
+  updatePlan as updateStoredPlan,
 } from '../lib/plans/plan-storage';
 import { Plan } from '../lib/plans/types';
 
@@ -21,10 +22,24 @@ export function usePlans() {
     [],
   );
 
+  const updatePlan = useCallback(
+    (id: string, data: Partial<Pick<Plan, 'title' | 'description'>>) => {
+      const updatedPlan = updateStoredPlan(id, data);
+
+      if (!updatedPlan) {
+        return undefined;
+      }
+
+      setPlans((currentPlans) =>
+        currentPlans.map((plan) => (plan.id === id ? updatedPlan : plan)),
+      );
+
+      return updatedPlan;
+    },
+    [],
+  );
+
   const deletePlan = useCallback((id: string) => {
-    if (!plans.find((plan) => plan.id === id)) {
-      throw new Error(`Plan with id "${id}" not found.`);
-    }
     deleteStoredPlan(id);
 
     setPlans((currentPlans) => currentPlans.filter((plan) => plan.id !== id));
@@ -33,6 +48,7 @@ export function usePlans() {
   return {
     plans,
     createPlan,
+    updatePlan,
     deletePlan,
   };
 }
