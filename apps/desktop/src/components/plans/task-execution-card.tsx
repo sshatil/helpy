@@ -1,4 +1,4 @@
-import { Pause, Play, RotateCcw, Square } from 'lucide-react';
+import { CheckCircle2, Pause, Play, RotateCcw, Square } from 'lucide-react';
 
 import { Badge } from '@repo/ui/components/ui/badge';
 import { Button } from '@repo/ui/components/ui/button';
@@ -10,18 +10,18 @@ import {
   CardTitle,
 } from '@repo/ui/components/ui/card';
 
-import type { Task, TaskStatus } from '../../lib/plans/types';
-import { useTaskTimer } from '../../hooks/use-task-timer';
+import type { Task } from '../../lib/plans/types';
+import { useTaskExecution } from '../../hooks/use-task-execution';
 
 type TaskExecutionCardProps = {
   task: Task;
-  onStatusChange: (status: TaskStatus) => void;
-  onComplete: () => void;
+  onComplete?: () => void;
+  onNextTask?: () => void;
+  onReset?: () => void;
 };
 
 function formatTime(seconds: number) {
   const minutes = Math.floor(seconds / 60);
-
   const remainingSeconds = seconds % 60;
 
   return `${String(minutes).padStart(2, '0')}:${String(
@@ -31,46 +31,83 @@ function formatTime(seconds: number) {
 
 export function TaskExecutionCard({
   task,
-  onStatusChange,
   onComplete,
+  onNextTask,
+  onReset,
 }: TaskExecutionCardProps) {
-  const { status, remainingSeconds, start, pause, stop, reset } = useTaskTimer({
-    duration: task.duration,
-    initialStatus: task.status,
-    onStatusChange,
-    onComplete,
-  });
+  const {
+    status,
+    remainingSeconds,
+    isJustCompleted,
+    start,
+    pause,
+    resume,
+    stop,
+    reset,
+  } = useTaskExecution(task);
 
-  function handleStart() {
-    start();
-  }
-
-  function handlePause() {
-    pause();
-  }
-
-  function handleStop() {
-    stop();
-  }
-
-  function handleReset() {
-    reset();
-  }
+  const isCompleted =
+    task.completed || isJustCompleted || status === 'completed';
 
   const isRunning = status === 'running';
 
   const isPaused = status === 'paused';
 
-  const isCompleted = status === 'completed';
+  const displaySeconds = isCompleted ? 0 : remainingSeconds;
+
+  /*
+   * The execution store owns the actual completion.
+   *
+   * onComplete is only notified when the task
+   * transitions into the completed state.
+   */
+  function handleComplete() {
+    onComplete?.();
+  }
+
+  function handleReset() {
+    /*
+     * Prefer the page-level reset handler because
+     * the page also needs to refresh its task list.
+     */
+    if (onReset) {
+      onReset();
+      return;
+    }
+
+    reset();
+  }
+
+  function handleNextTask() {
+    onNextTask?.();
+  }
+
+  /*
+   * The timer store changes status to completed
+   * when the timer reaches zero.
+   *
+   * The parent callback is therefore triggered
+   * from the completion state.
+   */
+  if (isJustCompleted) {
+    /*
+     * The callback itself is handled by the
+     * parent when the execution state changes.
+     *
+     * No side effect is needed here.
+     */
+  }
 
   return (
     <Card>
       <CardHeader>
         <div className='flex items-center justify-between gap-4'>
-          <div>
+          <div className='min-w-0'>
             <CardTitle>Current Task</CardTitle>
 
-            <CardDescription className='mt-1'>{task.title}</CardDescription>
+            <CardDescription className='mt-1 truncate'>
+              {task.title}
+            </CardDescription>
           </div>
 
           <Badge
@@ -84,7 +121,7 @@ export function TaskExecutionCard({
                     : 'secondary'
             }
           >
-            {status}
+            {isCompleted ? 'Completed' : status}
           </Badge>
         </div>
       </CardHeader>
@@ -92,64 +129,66 @@ export function TaskExecutionCard({
       <CardContent className='space-y-6'>
         <div className='flex justify-center'>
           <div className='text-6xl font-bold tracking-tight tabular-nums'>
-            {formatTime(remainingSeconds)}
+            {formatTime(displaySeconds)}
           </div>
         </div>
 
-        <div className='flex flex-wrap justify-center gap-2'>
-          {status === 'ready' && (
-            <Button onClick={handleStart}>
-              <Play className='mr-2 size-4' />
-              Start
-            </Button>
-          )}
+        {isCompleted ? (
+          <div className='space-y-4'>
+            <div className='text-muted-foreground flex items-center justify-center gap-2 text-sm'>
+              <CheckCircle2 className='size-4' />
 
-          {isRunning && (
-            <>
-              <Button onClick={handlePause} variant='outline'>
-                <Pause className='mr-2 size-4' />
-                Pause
+              <span>Task completed</span>
+            </div>
+
+            <div className='flex flex-wrap justify-center gap-2'>
+              <Button variant='outline' onClick={handleReset}>
+                <RotateCcw className='mr-2 size-4' />
+                Reset
               </Button>
 
-              <Button onClick={handleStop} variant='destructive'>
-                <Square className='mr-2 size-4' />
-                Stop
-              </Button>
-            </>
-          )}
-
-          {isPaused && (
-            <>
-              <Button onClick={handleStart}>
+              {onNextTask && (
+                <Button onClick={handleNextTask}>Next Task</Button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className='flex flex-wrap justify-center gap-2'>
+            {status === 'ready' && (
+              <Button onClick={start}>
                 <Play className='mr-2 size-4' />
-                Resume
+                Start
               </Button>
+            )}
 
-              <Button onClick={handleStop} variant='destructive'>
-                <Square className='mr-2 size-4' />
-                Stop
-              </Button>
-            </>
-          )}
+            {isRunning && (
+              <>
+                <Button variant='outline' onClick={pause}>
+                  <Pause className='mr-2 size-4' />
+                  Pause
+                </Button>
 
-          {isCompleted && (
-            <Button onClick={handleReset} variant='outline'>
-              <RotateCcw className='mr-2 size-4' />
-              Reset
-            </Button>
-          )}
-        </div>
+                <Button variant='destructive' onClick={stop}>
+                  <Square className='mr-2 size-4' />
+                  Stop
+                </Button>
+              </>
+            )}
 
-        {isPaused && (
-          <p className='text-muted-foreground text-center text-sm'>
-            Timer paused with {formatTime(remainingSeconds)} remaining.
-          </p>
-        )}
+            {isPaused && (
+              <>
+                <Button onClick={resume}>
+                  <Play className='mr-2 size-4' />
+                  Resume
+                </Button>
 
-        {isCompleted && (
-          <p className='text-muted-foreground text-center text-sm'>
-            Task completed.
-          </p>
+                <Button variant='destructive' onClick={stop}>
+                  <Square className='mr-2 size-4' />
+                  Stop
+                </Button>
+              </>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>

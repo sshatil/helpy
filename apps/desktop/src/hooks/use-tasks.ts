@@ -7,10 +7,22 @@ import {
   reorderTasks as reorderStoredTasks,
   updateTask as updateStoredTask,
 } from '../lib/plans/task-storage';
-import { Task } from '../lib/plans/types';
+
+import type { Task } from '../lib/plans/types';
 
 export function useTasks(planId: string) {
   const [tasks, setTasks] = useState<Task[]>(() => getTasksByPlanId(planId));
+
+  /*
+   * Re-read the current tasks from storage.
+   *
+   * This is needed because some task changes,
+   * such as timer completion, are performed
+   * by execution-store rather than this hook.
+   */
+  const refreshTasks = useCallback(() => {
+    setTasks(getTasksByPlanId(planId));
+  }, [planId]);
 
   const createTask = useCallback(
     (
@@ -81,5 +93,6 @@ export function useTasks(planId: string) {
     updateTask,
     deleteTask,
     reorderTasks,
+    refreshTasks,
   };
 }

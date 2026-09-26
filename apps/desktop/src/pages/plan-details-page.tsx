@@ -1,9 +1,7 @@
+// import { useState } from 'react';
 // import { Link, useNavigate, useParams } from 'react-router-dom';
 // import { Trash2 } from 'lucide-react';
-// import { useState } from 'react';
 
-// import { CreateTaskDialog } from '../components/plan-details/create-task-dialog';
-// import { EditPlanDialog } from '../components/plan-details/edit-plan-dialog';
 // import { Button } from '@repo/ui/components/ui/button';
 // import {
 //   Card,
@@ -20,16 +18,23 @@
 //   DialogHeader,
 //   DialogTitle,
 // } from '@repo/ui/components/ui/dialog';
+
+// import { CreateTaskDialog } from '../components/plan-details/create-task-dialog';
+// import { EditPlanDialog } from '../components/plan-details/edit-plan-dialog';
+// import { TaskList } from '../components/plan-details/task-list';
+
 // import { usePlans } from '../hooks/use-plans';
 // import { useTasks } from '../hooks/use-tasks';
-// import { TaskList } from '../components/plan-details/task-list';
-// import { Task } from '../lib/plans/types';
+
+// import type { Task } from '../lib/plans/types';
+// import { TaskExecutionCard } from '../components/plans/task-execution-card';
 
 // export default function PlanDetailsPage() {
 //   const { planId } = useParams();
 //   const navigate = useNavigate();
 
 //   const { plans, updatePlan, deletePlan } = usePlans();
+//   const [justCompletedTaskId, setJustCompletedTaskId] = useState<string>();
 
 //   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -58,15 +63,11 @@
 //   }
 
 //   const completedTasks = tasks.filter((task) => task.completed).length;
+
 //   const activeTask =
-//   tasks.find(
-//     (task) =>
-//       task.status === 'running' ||
-//       task.status === 'paused',
-//   ) ??
-//   tasks.find(
-//     (task) => task.status === 'ready',
-//   );
+//     tasks.find(
+//       (task) => task.status === 'running' || task.status === 'paused',
+//     ) ?? tasks.find((task) => task.status === 'ready');
 
 //   const progress =
 //     tasks.length === 0 ? 0 : Math.round((completedTasks / tasks.length) * 100);
@@ -95,18 +96,50 @@
 //     reorderTasks(taskIds);
 //   }
 
-//   function handleTaskStatusChange(
-//   taskId: string,
-//   status: Task['status'],
-// ) {
-//   updateTask(taskId, {
-//     status,
-//     completed: status === 'completed',
-//   });
-// }
+//   function handleTaskStatusChange(taskId: string, status: Task['status']) {
+//     /*
+//      * Only one task can be running at a time.
+//      *
+//      * If another task is currently running and
+//      * the user starts this task, pause the
+//      * previous running task.
+//      */
+//     if (status === 'running') {
+//       tasks.forEach((task) => {
+//         if (task.id !== taskId && task.status === 'running') {
+//           updateTask(task.id, {
+//             status: 'paused',
+//             completed: false,
+//           });
+//         }
+//       });
+//     }
+
+//     updateTask(taskId, {
+//       status,
+//       completed: status === 'completed',
+//     });
+//   }
+
+//   function handleTaskComplete(taskId: string) {
+//     updateTask(taskId, {
+//       status: 'completed',
+//       completed: true,
+//     });
+//   }
+
+//   function handleManualComplete(task: Task) {
+//     const nextCompleted = !task.completed;
+
+//     updateTask(task.id, {
+//       completed: nextCompleted,
+//       status: nextCompleted ? 'completed' : 'ready',
+//     });
+//   }
 
 //   return (
 //     <div className='space-y-8'>
+//       {/* Plan Header */}
 //       <div className='flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
 //         <div>
 //           <Button variant='ghost' className='mb-3 px-0' asChild>
@@ -133,6 +166,7 @@
 //         </div>
 //       </div>
 
+//       {/* Task Statistics */}
 //       <div className='grid gap-4 md:grid-cols-3'>
 //         <Card>
 //           <CardHeader>
@@ -171,6 +205,12 @@
 //         </Card>
 //       </div>
 
+//       {/* Task Execution */}
+//       {activeTask && (
+//         <TaskExecutionCard key={activeTask.id} task={activeTask} />
+//       )}
+
+//       {/* Tasks */}
 //       <Card>
 //         <CardHeader>
 //           <div className='flex items-center justify-between gap-4'>
@@ -213,6 +253,7 @@
 //                     handleMoveTask={handleMoveTask}
 //                     deleteTask={deleteTask}
 //                     tasks={tasks}
+//                     onToggleComplete={() => handleManualComplete(task)}
 //                   />
 //                 </div>
 //               ))}
@@ -221,6 +262,7 @@
 //         </CardContent>
 //       </Card>
 
+//       {/* Delete Plan Dialog */}
 //       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
 //         <DialogContent>
 //           <DialogHeader>
@@ -248,7 +290,7 @@
 //     </div>
 //   );
 // }
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
 
@@ -272,12 +314,12 @@ import {
 import { CreateTaskDialog } from '../components/plan-details/create-task-dialog';
 import { EditPlanDialog } from '../components/plan-details/edit-plan-dialog';
 import { TaskList } from '../components/plan-details/task-list';
+import { TaskExecutionCard } from '../components/plans/task-execution-card';
 
 import { usePlans } from '../hooks/use-plans';
 import { useTasks } from '../hooks/use-tasks';
 
-import type { Task } from '../lib/plans/types';
-import { TaskExecutionCard } from '../components/plans/task-execution-card';
+import { executionStore } from '../lib/plans/execution-store';
 
 export default function PlanDetailsPage() {
   const { planId } = useParams();
@@ -285,13 +327,35 @@ export default function PlanDetailsPage() {
 
   const { plans, updatePlan, deletePlan } = usePlans();
 
+  const [justCompletedTaskId, setJustCompletedTaskId] = useState<string>();
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const plan = plans.find((item) => item.id === planId);
 
-  const { tasks, createTask, updateTask, deleteTask, reorderTasks } = useTasks(
-    planId ?? '',
-  );
+  const {
+    tasks,
+    createTask,
+    updateTask,
+    deleteTask,
+    reorderTasks,
+    refreshTasks,
+  } = useTasks(planId ?? '');
+
+  /*
+   * The completed task is only kept visible while
+   * this page is mounted.
+   *
+   * If the user navigates away and comes back,
+   * this state is gone and the next ready task
+   * becomes active.
+   */
+  useEffect(() => {
+    return () => {
+      setJustCompletedTaskId(undefined);
+      executionStore.clearCompletedTask();
+    };
+  }, []);
 
   if (!plan || !planId) {
     return (
@@ -313,10 +377,31 @@ export default function PlanDetailsPage() {
 
   const completedTasks = tasks.filter((task) => task.completed).length;
 
+  /*
+   * Priority:
+   *
+   * 1. The task that just completed.
+   * 2. Currently running task.
+   * 3. Currently paused task.
+   * 4. First ready task.
+   *
+   * This gives us the desired behavior:
+   *
+   * - Completion -> keep completed task visible.
+   * - Next Task -> show the next ready task.
+   * - Reload/navigation -> show running/paused task if one
+   *   exists, otherwise the first ready task.
+   */
+  const completedTask = justCompletedTaskId
+    ? tasks.find((task) => task.id === justCompletedTaskId)
+    : undefined;
+
   const activeTask =
+    completedTask ??
     tasks.find(
       (task) => task.status === 'running' || task.status === 'paused',
-    ) ?? tasks.find((task) => task.status === 'ready');
+    ) ??
+    tasks.find((task) => task.status === 'ready');
 
   const progress =
     tasks.length === 0 ? 0 : Math.round((completedTasks / tasks.length) * 100);
@@ -324,7 +409,9 @@ export default function PlanDetailsPage() {
   const selectedId = planId;
   function handleDeletePlan() {
     deletePlan(selectedId);
+
     setDeleteDialogOpen(false);
+
     navigate('/study/plans');
   }
 
@@ -345,45 +432,57 @@ export default function PlanDetailsPage() {
     reorderTasks(taskIds);
   }
 
-  function handleTaskStatusChange(taskId: string, status: Task['status']) {
-    /*
-     * Only one task can be running at a time.
-     *
-     * If another task is currently running and
-     * the user starts this task, pause the
-     * previous running task.
-     */
-    if (status === 'running') {
-      tasks.forEach((task) => {
-        if (task.id !== taskId && task.status === 'running') {
-          updateTask(task.id, {
-            status: 'paused',
-            completed: false,
-          });
-        }
-      });
-    }
-
-    updateTask(taskId, {
-      status,
-      completed: status === 'completed',
-    });
-  }
-
-  function handleTaskComplete(taskId: string) {
-    updateTask(taskId, {
-      status: 'completed',
-      completed: true,
-    });
-  }
-
-  function handleManualComplete(task: Task) {
+  function handleManualComplete(task: (typeof tasks)[number]) {
     const nextCompleted = !task.completed;
 
     updateTask(task.id, {
       completed: nextCompleted,
       status: nextCompleted ? 'completed' : 'ready',
     });
+
+    /*
+     * If the user manually completes the
+     * currently displayed task, don't leave
+     * the execution card pointing at it.
+     */
+    if (nextCompleted && task.id === activeTask?.id) {
+      setJustCompletedTaskId(task.id);
+    }
+  }
+
+  function handleTaskExecutionComplete(taskId: string) {
+    /*
+     * The execution store already marks
+     * the task completed.
+     *
+     * We only need to:
+     * 1. keep the completed task visible
+     * 2. refresh React's task state
+     */
+    setJustCompletedTaskId(taskId);
+
+    refreshTasks();
+  }
+
+  function handleNextTask() {
+    /*
+     * Remove the temporary completed-task
+     * state so activeTask becomes the first
+     * running/paused/ready task.
+     */
+    setJustCompletedTaskId(undefined);
+
+    executionStore.clearCompletedTask();
+
+    refreshTasks();
+  }
+
+  function handleResetTask(taskId: string) {
+    executionStore.resetTask(taskId);
+
+    setJustCompletedTaskId(undefined);
+
+    refreshTasks();
   }
 
   return (
@@ -459,11 +558,23 @@ export default function PlanDetailsPage() {
         <TaskExecutionCard
           key={activeTask.id}
           task={activeTask}
-          onStatusChange={(status) =>
-            handleTaskStatusChange(activeTask.id, status)
-          }
-          onComplete={() => handleTaskComplete(activeTask.id)}
+          onComplete={() => handleTaskExecutionComplete(activeTask.id)}
+          onNextTask={handleNextTask}
+          onReset={() => handleResetTask(activeTask.id)}
         />
+      )}
+
+      {/* Plan Complete */}
+      {!activeTask && tasks.length > 0 && completedTasks === tasks.length && (
+        <Card>
+          <CardContent className='flex flex-col items-center justify-center gap-3 py-10 text-center'>
+            <div className='text-lg font-semibold'>Plan completed</div>
+
+            <p className='text-muted-foreground text-sm'>
+              You completed all tasks in this plan.
+            </p>
+          </CardContent>
+        </Card>
       )}
 
       {/* Tasks */}
