@@ -16,7 +16,10 @@ function getAllTasks(): Task[] {
       return [];
     }
 
-    return parsedTasks;
+    return parsedTasks.map((task) => ({
+      ...task,
+      status: task.status ?? (task.completed ? 'completed' : 'ready'),
+    }));
   } catch {
     return [];
   }
@@ -37,7 +40,10 @@ export function getTaskById(id: string): Task | undefined {
 }
 
 export function createTask(
-  data: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'order' | 'completed'>,
+  data: Omit<
+    Task,
+    'id' | 'createdAt' | 'updatedAt' | 'order' | 'completed' | 'status'
+  >,
 ): Task {
   const now = new Date().toISOString();
   const tasks = getAllTasks();
@@ -51,6 +57,7 @@ export function createTask(
     id: crypto.randomUUID(),
     order: nextOrder,
     completed: false,
+    status: 'ready',
     createdAt: now,
     updatedAt: now,
   };
@@ -63,7 +70,10 @@ export function createTask(
 export function updateTask(
   id: string,
   data: Partial<
-    Pick<Task, 'title' | 'duration' | 'notes' | 'links' | 'completed'>
+    Pick<
+      Task,
+      'title' | 'duration' | 'notes' | 'links' | 'completed' | 'status'
+    >
   >,
 ): Task | undefined {
   const tasks = getAllTasks();

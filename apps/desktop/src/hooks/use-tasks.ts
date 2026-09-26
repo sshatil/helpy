@@ -16,7 +16,7 @@ export function useTasks(planId: string) {
     (
       data: Omit<
         Task,
-        'id' | 'createdAt' | 'updatedAt' | 'order' | 'completed'
+        'id' | 'createdAt' | 'updatedAt' | 'order' | 'completed' | 'status'
       >,
     ) => {
       const task = createStoredTask(data);
@@ -32,7 +32,10 @@ export function useTasks(planId: string) {
     (
       id: string,
       data: Partial<
-        Pick<Task, 'title' | 'duration' | 'notes' | 'links' | 'completed'>
+        Pick<
+          Task,
+          'title' | 'duration' | 'notes' | 'links' | 'completed' | 'status'
+        >
       >,
     ) => {
       const updatedTask = updateStoredTask(id, data);

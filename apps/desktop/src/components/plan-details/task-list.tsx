@@ -1,7 +1,9 @@
+import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
+
 import { Badge } from '@repo/ui/components/ui/badge';
 import { Button } from '@repo/ui/components/ui/button';
-import { Task } from '../../lib/plans/types';
-import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
+
+import type { Task } from '../../lib/plans/types';
 import { EditTaskDialog } from './edit-task-dialog';
 
 type TaskProps = {
@@ -11,6 +13,7 @@ type TaskProps = {
   updateTask: (id: string, data: any) => void;
   handleMoveTask: (index: number, direction: 'up' | 'down') => void;
   deleteTask: (id: string) => void;
+  onToggleComplete: () => void;
 };
 
 export function TaskList({
@@ -20,6 +23,7 @@ export function TaskList({
   handleMoveTask,
   deleteTask,
   tasks,
+  onToggleComplete,
 }: TaskProps) {
   return (
     <div className='flex items-start gap-4'>
@@ -42,6 +46,10 @@ export function TaskList({
           <Badge variant='secondary'>{task.duration} min</Badge>
 
           {task.completed && <Badge>Completed</Badge>}
+
+          {task.status === 'running' && <Badge>Running</Badge>}
+
+          {task.status === 'paused' && <Badge variant='outline'>Paused</Badge>}
         </div>
 
         {task.notes && (
@@ -68,11 +76,7 @@ export function TaskList({
           <Button
             size='sm'
             variant={task.completed ? 'outline' : 'secondary'}
-            onClick={() =>
-              updateTask(task.id, {
-                completed: !task.completed,
-              })
-            }
+            onClick={onToggleComplete}
           >
             {task.completed ? 'Mark Incomplete' : 'Mark Complete'}
           </Button>

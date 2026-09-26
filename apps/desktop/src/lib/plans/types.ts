@@ -6,6 +6,8 @@ export type Plan = {
   updatedAt: string;
 };
 
+export type TaskStatus = 'ready' | 'running' | 'paused' | 'completed';
+
 export type Task = {
   id: string;
   planId: string;
@@ -15,6 +17,7 @@ export type Task = {
   links: string[];
   order: number;
   completed: boolean;
+  status: TaskStatus;
   createdAt: string;
   updatedAt: string;
 };
