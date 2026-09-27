@@ -27,10 +27,16 @@ export function useTasks(planId: string) {
   const createTaskMutation = useMutation({
     mutationFn: (data: CreateTaskInput) => createTask(data),
 
-    onSuccess: () => {
+    onSuccess: (task) => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.tasks.all(planId),
       });
+
+      if (task) {
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.tasks.detail(task.id),
+        });
+      }
     },
   });
 
@@ -48,9 +54,13 @@ export function useTasks(planId: string) {
   const deleteTaskMutation = useMutation({
     mutationFn: (id: string) => deleteTask(id),
 
-    onSuccess: () => {
+    onSuccess: (_, taskId) => {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.tasks.all(planId),
+      });
+
+      void queryClient.removeQueries({
+        queryKey: queryKeys.tasks.detail(taskId),
       });
     },
   });
