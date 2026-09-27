@@ -35,6 +35,9 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.3.0(@types/node@26.4.1)(jiti@2.7.0))
+      '@tanstack/react-query':
+        specifier: ^5.104.0
+        version: 5.104.0(react@19.2.8)
       '@tauri-apps/api':
         specifier: ^2
         version: 2.11.1
@@ -1654,6 +1657,14 @@ packages:
     resolution: {integrity: sha512-yYU8cogLeSh/ms2jh8Fj7jaba/EWa7Ja6GoUqYZaraEuCI5YS6ms6ObZgjjedm+jm6XZjdNRWBpPP6Z86oOxcw==}
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7 || ^8
+
+  '@tanstack/query-core@5.104.0':
+    resolution: {integrity: sha512-JrC2r/JQlXt7khBSdUpsgxNvybzOg+aITa+ARRMlP2AFo93Y8vIqz077rp+e61mJetSZ0T6AJbwW1JHer1vrPQ==}
+
+  '@tanstack/react-query@5.104.0':
+    resolution: {integrity: sha512-e1TZmDCQnWIfiDVryIHeA6Idj+Lfx1hORLOhXS/l5wcgvtVD4yYqbTDl378sGQKIi2cSgb0TEMC9cKK8GGoJEw==}
+    peerDependencies:
+      react: ^18 || ^19
 
   '@tauri-apps/api@2.11.1':
     resolution: {integrity: sha512-M2FPuYND2m+wh5hfW9ZpSdxMPdEJovPBWwoHJmwUpysTYNHaOkVFN419m/K0LIgjb/7KU2vBgsUepJWugQCvAA==}
@@ -4229,6 +4240,13 @@ snapshots:
       '@tailwindcss/oxide': 4.3.3
       tailwindcss: 4.3.3
       vite: 8.3.0(@types/node@26.4.1)(jiti@2.7.0)
+
+  '@tanstack/query-core@5.104.0': {}
+
+  '@tanstack/react-query@5.104.0(react@19.2.8)':
+    dependencies:
+      '@tanstack/query-core': 5.104.0
+      react: 19.2.8
 
   '@tauri-apps/api@2.11.1': {}
 
