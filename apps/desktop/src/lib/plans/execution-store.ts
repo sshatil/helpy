@@ -9,6 +9,8 @@ import { getTaskById, updateTask } from './task-storage';
 import { queryClient } from '../query/query-client';
 import { queryKeys } from '../query/query-keys';
 
+import { handleTaskCompletion } from './task-completion';
+
 import type { Task, TaskExecution } from './types';
 
 type Listener = () => void;
@@ -131,7 +133,9 @@ async function completeCurrentTask() {
     return;
   }
 
-  const taskId = execution.taskId;
+  const currentExecution = execution;
+
+  const taskId = currentExecution.taskId;
 
   const task = getTaskById(taskId);
 
@@ -146,6 +150,20 @@ async function completeCurrentTask() {
     invalidateTasks(task.planId);
 
     completedTaskId = taskId;
+
+    execution = undefined;
+
+    clearTaskExecution();
+
+    emit();
+
+    await handleTaskCompletion(task, {
+      ...currentExecution,
+      remainingSeconds: 0,
+      status: 'completed',
+    });
+
+    return;
   }
 
   execution = undefined;
@@ -153,13 +171,6 @@ async function completeCurrentTask() {
   clearTaskExecution();
 
   emit();
-
-  // Notification can be enabled later:
-  // if (task) {
-  //   await sendTaskCompletionNotification(
-  //     task.title,
-  //   );
-  // }
 }
 
 function ensureExecutionIsValid() {
@@ -232,12 +243,15 @@ function startTask(task: Task) {
 
   const now = Date.now();
 
+  const startedAt = new Date().toISOString();
+
   execution = {
     taskId: task.id,
     status: 'running',
+    startedAt,
     remainingSeconds: durationSeconds,
     endAt: new Date(now + durationSeconds * 1000).toISOString(),
-    updatedAt: new Date().toISOString(),
+    updatedAt: startedAt,
   };
 
   updateTask(task.id, {

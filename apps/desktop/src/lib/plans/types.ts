@@ -25,20 +25,8 @@ export type Task = {
 export type TaskExecution = {
   taskId: string;
   status: TaskStatus;
-
-  /**
-   * When running, this is the exact timestamp
-   * at which the timer should reach zero.
-   */
+  startedAt: string;
   endAt?: string;
-
-  /**
-   * Used while paused.
-   *
-   * We don't need endAt while paused because
-   * the timer is no longer moving.
-   */
   remainingSeconds: number;
-
   updatedAt: string;
 };
