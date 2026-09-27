@@ -41,14 +41,9 @@ export default function PlanDetailsPage() {
 
   const plan = plans.find((item) => item.id === planId);
 
-  const {
-    tasks,
-    createTask,
-    updateTask,
-    deleteTask,
-    reorderTasks,
-    refreshTasks,
-  } = useTasks(planId ?? '');
+  const { tasks, createTask, updateTask, deleteTask, reorderTasks } = useTasks(
+    planId ?? '',
+  );
 
   /*
    * Clear the temporary completed-task UI
@@ -173,26 +168,15 @@ export default function PlanDetailsPage() {
   }
 
   function handleNextTask() {
-    /*
-     * Remove the temporary completed-task
-     * state so activeTask becomes the next
-     * running/paused/ready task.
-     *
-     * The next task is NOT automatically started.
-     */
     setJustCompletedTaskId(undefined);
 
     executionStore.clearCompletedTask();
-
-    refreshTasks();
   }
 
   function handleResetTask(taskId: string) {
     executionStore.resetTask(taskId);
 
     setJustCompletedTaskId(undefined);
-
-    refreshTasks();
   }
 
   return (

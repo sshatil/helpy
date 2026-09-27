@@ -1,98 +1,99 @@
-import { useCallback, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
-  createTask as createStoredTask,
-  deleteTask as deleteStoredTask,
-  getTasksByPlanId,
-  reorderTasks as reorderStoredTasks,
-  updateTask as updateStoredTask,
-} from '../lib/plans/task-storage';
+  createTask,
+  deleteTask,
+  getTasks,
+  reorderTasks,
+  updateTask,
+} from '../lib/plans/task-repository';
 
-import type { Task } from '../lib/plans/types';
+import type {
+  CreateTaskInput,
+  UpdateTaskInput,
+} from '../lib/plans/task-repository';
+
+import { queryKeys } from '../lib/query/query-keys';
 
 export function useTasks(planId: string) {
-  const [tasks, setTasks] = useState<Task[]>(() => getTasksByPlanId(planId));
+  const queryClient = useQueryClient();
 
-  /*
-   * Re-read the current tasks from storage.
-   *
-   * This is needed because some task changes,
-   * such as timer completion, are performed
-   * by execution-store rather than this hook.
-   */
-  const refreshTasks = useCallback(() => {
-    setTasks(getTasksByPlanId(planId));
-  }, [planId]);
+  const tasksQuery = useQuery({
+    queryKey: queryKeys.tasks.all(planId),
+    queryFn: () => getTasks(planId),
+    enabled: Boolean(planId),
+  });
 
-  const createTask = useCallback(
-    (
-      data: Omit<
-        Task,
-        'id' | 'createdAt' | 'updatedAt' | 'order' | 'completed' | 'status'
-      >,
-    ) => {
-      const task = createStoredTask(data);
+  const createTaskMutation = useMutation({
+    mutationFn: (data: CreateTaskInput) => createTask(data),
 
-      setTasks((currentTasks) => [...currentTasks, task]);
-
-      return task;
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.all(planId),
+      });
     },
-    [],
-  );
+  });
 
-  const updateTask = useCallback(
-    (
-      id: string,
-      data: Partial<
-        Pick<
-          Task,
-          'title' | 'duration' | 'notes' | 'links' | 'completed' | 'status'
-        >
-      >,
-    ) => {
-      const updatedTask = updateStoredTask(id, data);
+  const updateTaskMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateTaskInput }) =>
+      updateTask(id, data),
 
-      if (!updatedTask) {
-        return undefined;
-      }
-
-      setTasks((currentTasks) =>
-        currentTasks.map((task) => (task.id === id ? updatedTask : task)),
-      );
-
-      return updatedTask;
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.all(planId),
+      });
     },
-    [],
-  );
+  });
 
-  const deleteTask = useCallback((id: string) => {
-    deleteStoredTask(id);
+  const deleteTaskMutation = useMutation({
+    mutationFn: (id: string) => deleteTask(id),
 
-    setTasks((currentTasks) =>
-      currentTasks
-        .filter((task) => task.id !== id)
-        .map((task, index) => ({
-          ...task,
-          order: index,
-        })),
-    );
-  }, []);
-
-  const reorderTasks = useCallback(
-    (taskIds: string[]) => {
-      const reorderedTasks = reorderStoredTasks(planId, taskIds);
-
-      setTasks(reorderedTasks);
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.all(planId),
+      });
     },
-    [planId],
-  );
+  });
+
+  const reorderTasksMutation = useMutation({
+    mutationFn: (taskIds: string[]) => reorderTasks(planId, taskIds),
+
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.all(planId),
+      });
+    },
+  });
 
   return {
-    tasks,
-    createTask,
-    updateTask,
-    deleteTask,
-    reorderTasks,
-    refreshTasks,
+    tasks: tasksQuery.data ?? [],
+
+    isLoading: tasksQuery.isLoading,
+
+    isFetching: tasksQuery.isFetching,
+
+    error: tasksQuery.error,
+
+    refetch: tasksQuery.refetch,
+
+    createTask: createTaskMutation.mutate,
+
+    updateTask: (id: string, data: UpdateTaskInput) =>
+      updateTaskMutation.mutate({
+        id,
+        data,
+      }),
+
+    deleteTask: deleteTaskMutation.mutate,
+
+    reorderTasks: reorderTasksMutation.mutate,
+
+    isCreating: createTaskMutation.isPending,
+
+    isUpdating: updateTaskMutation.isPending,
+
+    isDeleting: deleteTaskMutation.isPending,
+
+    isReordering: reorderTasksMutation.isPending,
   };
 }

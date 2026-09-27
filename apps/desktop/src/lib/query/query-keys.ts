@@ -6,6 +6,7 @@ export const queryKeys = {
 
   tasks: {
     all: (planId: string) => ['tasks', planId] as const,
-    detail: (taskId: string) => ['task', taskId] as const,
+
+    detail: (taskId: string) => ['tasks', 'detail', taskId] as const,
   },
 } as const;

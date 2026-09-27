@@ -49,6 +49,10 @@ export function usePlans() {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.plans.all,
       });
+
+      void queryClient.invalidateQueries({
+        queryKey: ['tasks'],
+      });
     },
   });
 

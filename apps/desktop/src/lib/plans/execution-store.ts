@@ -6,6 +6,9 @@ import {
 
 import { getTaskById, updateTask } from './task-storage';
 
+import { queryClient } from '../query/query-client';
+import { queryKeys } from '../query/query-keys';
+
 import type { Task, TaskExecution } from './types';
 
 type Listener = () => void;
@@ -30,11 +33,6 @@ let interval: ReturnType<typeof setInterval> | undefined;
 
 let completionTimeout: ReturnType<typeof setTimeout> | undefined;
 
-/*
- * Keep the snapshot reference stable.
- *
- * useSyncExternalStore() relies on this.
- */
 function updateSnapshot() {
   snapshot = {
     execution,
@@ -56,6 +54,12 @@ function persist() {
   } else {
     clearTaskExecution();
   }
+}
+
+function invalidateTasks(planId: string) {
+  void queryClient.invalidateQueries({
+    queryKey: queryKeys.tasks.all(planId),
+  });
 }
 
 function getRemainingSeconds(currentExecution: TaskExecution): number {
@@ -116,9 +120,6 @@ function scheduleCompletion() {
       updatedAt: new Date().toISOString(),
     };
 
-    /*
-     * Keep storage updated while running.
-     */
     setTaskExecution(execution);
 
     emit();
@@ -142,39 +143,23 @@ async function completeCurrentTask() {
       completed: true,
     });
 
-    /*
-     * Memory-only completion state.
-     *
-     * This allows the current page to show:
-     *
-     * 00:00
-     * Task completed
-     * Reset
-     * Next Task
-     *
-     * It is intentionally NOT persisted.
-     */
+    invalidateTasks(task.planId);
+
     completedTaskId = taskId;
   }
 
-  /*
-   * There is no active timer anymore.
-   */
   execution = undefined;
 
   clearTaskExecution();
 
   emit();
 
-  /*
-   * Notification can be enabled later:
-   *
-   * if (task) {
-   *   await sendTaskCompletionNotification(
-   *     task.title,
-   *   );
-   * }
-   */
+  // Notification can be enabled later:
+  // if (task) {
+  //   await sendTaskCompletionNotification(
+  //     task.title,
+  //   );
+  // }
 }
 
 function ensureExecutionIsValid() {
@@ -188,36 +173,22 @@ function ensureExecutionIsValid() {
 
   const remaining = getRemainingSeconds(execution);
 
-  /*
-   * Timer finished while the app was
-   * closed/backgrounded.
-   */
   if (remaining <= 0) {
     void completeCurrentTask();
     return;
   }
 
-  /*
-   * Recalculate remaining time from endAt.
-   */
   execution = {
     ...execution,
     remainingSeconds: remaining,
   };
 
-  /*
-   * Make the initial snapshot match
-   * the restored execution.
-   */
   updateSnapshot();
 
   scheduleCompletion();
 }
 
 function startTask(task: Task) {
-  /*
-   * Completed tasks cannot be started.
-   */
   if (task.completed) {
     return;
   }
@@ -230,10 +201,6 @@ function startTask(task: Task) {
     return;
   }
 
-  /*
-   * If another task is currently running,
-   * pause it first.
-   */
   if (
     execution &&
     execution.taskId !== task.id &&
@@ -241,10 +208,16 @@ function startTask(task: Task) {
   ) {
     const remaining = getRemainingSeconds(execution);
 
-    updateTask(execution.taskId, {
-      status: 'paused',
-      completed: false,
-    });
+    const previousTask = getTaskById(execution.taskId);
+
+    if (previousTask) {
+      updateTask(execution.taskId, {
+        status: 'paused',
+        completed: false,
+      });
+
+      invalidateTasks(previousTask.planId);
+    }
 
     execution = {
       ...execution,
@@ -255,10 +228,6 @@ function startTask(task: Task) {
     };
   }
 
-  /*
-   * Starting a task removes the temporary
-   * completed state.
-   */
   completedTaskId = undefined;
 
   const now = Date.now();
@@ -276,6 +245,8 @@ function startTask(task: Task) {
     completed: false,
   });
 
+  invalidateTasks(task.planId);
+
   persist();
 
   emit();
@@ -290,6 +261,8 @@ function pauseTask() {
 
   const remaining = getRemainingSeconds(execution);
 
+  const task = getTaskById(execution.taskId);
+
   clearTimers();
 
   execution = {
@@ -302,10 +275,14 @@ function pauseTask() {
 
   persist();
 
-  updateTask(execution.taskId, {
-    status: 'paused',
-    completed: false,
-  });
+  if (task) {
+    updateTask(execution.taskId, {
+      status: 'paused',
+      completed: false,
+    });
+
+    invalidateTasks(task.planId);
+  }
 
   emit();
 }
@@ -318,6 +295,8 @@ function resumeTask() {
   if (execution.remainingSeconds <= 0) {
     return;
   }
+
+  const task = getTaskById(execution.taskId);
 
   const endAt = new Date(
     Date.now() + execution.remainingSeconds * 1000,
@@ -332,10 +311,14 @@ function resumeTask() {
 
   persist();
 
-  updateTask(execution.taskId, {
-    status: 'running',
-    completed: false,
-  });
+  if (task) {
+    updateTask(execution.taskId, {
+      status: 'running',
+      completed: false,
+    });
+
+    invalidateTasks(task.planId);
+  }
 
   emit();
 
@@ -349,6 +332,8 @@ function stopTask() {
 
   const taskId = execution.taskId;
 
+  const task = getTaskById(taskId);
+
   clearTimers();
 
   execution = undefined;
@@ -357,21 +342,18 @@ function stopTask() {
 
   completedTaskId = undefined;
 
-  updateTask(taskId, {
-    status: 'ready',
-    completed: false,
-  });
+  if (task) {
+    updateTask(taskId, {
+      status: 'ready',
+      completed: false,
+    });
+
+    invalidateTasks(task.planId);
+  }
 
   emit();
 }
 
-/*
- * Reset a task by task ID.
- *
- * This works even after the timer has completed
- * because completed execution is no longer stored
- * in `execution`.
- */
 function resetTask(taskId: string) {
   const task = getTaskById(taskId);
 
@@ -387,10 +369,6 @@ function resetTask(taskId: string) {
 
   clearTimers();
 
-  /*
-   * If this task owns the active timer,
-   * remove that timer.
-   */
   if (execution?.taskId === taskId) {
     execution = undefined;
 
@@ -402,6 +380,8 @@ function resetTask(taskId: string) {
     completed: false,
   });
 
+  invalidateTasks(task.planId);
+
   if (completedTaskId === taskId) {
     completedTaskId = undefined;
   }
@@ -409,10 +389,6 @@ function resetTask(taskId: string) {
   emit();
 }
 
-/*
- * Used when the user clicks "Next Task"
- * or when the plan page unmounts.
- */
 function clearCompletedTask() {
   if (!completedTaskId) {
     return;
@@ -431,20 +407,10 @@ function subscribe(listener: Listener) {
   };
 }
 
-/*
- * IMPORTANT:
- *
- * Do not return a newly-created object here.
- * Always return the same snapshot reference
- * until emit() changes it.
- */
 function getSnapshot(): ExecutionSnapshot {
   return snapshot;
 }
 
-/*
- * Restore an active timer when the app starts.
- */
 ensureExecutionIsValid();
 
 export const executionStore = {
