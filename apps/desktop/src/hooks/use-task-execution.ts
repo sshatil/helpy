@@ -21,12 +21,24 @@ function getRemainingSeconds(
   );
 }
 
-export function useTaskExecution(task: Task) {
-  const snapshot = useSyncExternalStore(
+/**
+ * Shared runtime execution snapshot.
+ *
+ * This is the single source of truth for:
+ * - currently running task
+ * - paused task
+ * - completed task
+ */
+export function useExecutionSnapshot() {
+  return useSyncExternalStore(
     executionStore.subscribe,
     executionStore.getSnapshot,
     executionStore.getSnapshot,
   );
+}
+
+export function useTaskExecution(task: Task) {
+  const snapshot = useExecutionSnapshot();
 
   const execution = snapshot.execution;
 
@@ -34,11 +46,6 @@ export function useTaskExecution(task: Task) {
 
   const isCurrentTask = execution?.taskId === task.id;
 
-  /*
-   * Completion from the execution store
-   * has priority over the persisted task
-   * status because the store owns the timer.
-   */
   const status = isJustCompleted
     ? 'completed'
     : task.completed
@@ -76,6 +83,7 @@ export function useTaskExecution(task: Task) {
     remainingSeconds,
     isCurrentTask,
     isJustCompleted,
+
     start,
     pause,
     resume,

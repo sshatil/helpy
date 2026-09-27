@@ -28,14 +28,13 @@ import { usePlans } from '../hooks/use-plans';
 import { useTasks } from '../hooks/use-tasks';
 
 import { executionStore } from '../lib/plans/execution-store';
+import { useExecutionSnapshot } from '../hooks/use-task-execution';
 
 export default function PlanDetailsPage() {
   const { planId } = useParams();
   const navigate = useNavigate();
 
   const { plans, updatePlan, deletePlan } = usePlans();
-
-  const [justCompletedTaskId, setJustCompletedTaskId] = useState<string>();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -45,17 +44,10 @@ export default function PlanDetailsPage() {
     planId ?? '',
   );
 
-  /*
-   * Clear the temporary completed-task UI
-   * when leaving this page.
-   *
-   * The execution itself is not stopped here.
-   * This allows a running/paused task to
-   * continue while the user navigates elsewhere.
-   */
+  const { completedTaskId } = useExecutionSnapshot();
+
   useEffect(() => {
     return () => {
-      setJustCompletedTaskId(undefined);
       executionStore.clearCompletedTask();
     };
   }, []);
@@ -80,23 +72,8 @@ export default function PlanDetailsPage() {
 
   const completedTasks = tasks.filter((task) => task.completed).length;
 
-  /*
-   * Priority:
-   *
-   * 1. The task that just completed.
-   * 2. Currently running task.
-   * 3. Currently paused task.
-   * 4. First ready task.
-   *
-   * This gives us:
-   *
-   * - Completion -> keep completed task visible.
-   * - Next Task -> show the next ready task.
-   * - Navigation/reload -> show running/paused task
-   *   if one exists, otherwise the first ready task.
-   */
-  const completedTask = justCompletedTaskId
-    ? tasks.find((task) => task.id === justCompletedTaskId)
+  const completedTask = completedTaskId
+    ? tasks.find((task) => task.id === completedTaskId)
     : undefined;
 
   const activeTask =
@@ -156,47 +133,37 @@ export default function PlanDetailsPage() {
       completed: nextCompleted,
       status: nextCompleted ? 'completed' : 'ready',
     });
-
-    /*
-     * If the user manually completes
-     * the currently displayed task,
-     * keep it visible in the execution card.
-     */
-    if (nextCompleted && task.id === activeTask?.id) {
-      setJustCompletedTaskId(task.id);
-    }
   }
 
   function handleNextTask() {
-    setJustCompletedTaskId(undefined);
-
     executionStore.clearCompletedTask();
   }
 
   function handleResetTask(taskId: string) {
     executionStore.resetTask(taskId);
-
-    setJustCompletedTaskId(undefined);
   }
 
   return (
     <div className='space-y-8'>
       {/* Plan Header */}
-
       <div className='flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
-        <div>
-          <Button variant='ghost' className='mb-3 px-0' asChild>
-            <Link to='/study/plans'>← Back to Plans</Link>
-          </Button>
-
-          <h1 className='text-3xl font-bold tracking-tight'>{plan.title}</h1>
+        <div className='min-w-0'>
+          <div className='flex flex-wrap items-center gap-3'>
+            <h1 className='text-3xl font-bold tracking-tight'>{plan.title}</h1>
+          </div>
 
           {plan.description && (
-            <p className='text-muted-foreground mt-2'>{plan.description}</p>
+            <p className='text-muted-foreground mt-2 max-w-3xl'>
+              {plan.description}
+            </p>
           )}
+
+          <div className='text-muted-foreground mt-3 text-sm'>
+            {completedTasks} of {tasks.length} tasks completed
+          </div>
         </div>
 
-        <div className='flex gap-2'>
+        <div className='flex shrink-0 flex-wrap gap-2'>
           <EditPlanDialog plan={plan} onUpdate={handleUpdatePlan} />
 
           <Button
@@ -209,48 +176,62 @@ export default function PlanDetailsPage() {
         </div>
       </div>
 
-      {/* Task Statistics */}
+      {/* Plan Details */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Plan Details</CardTitle>
+          <CardDescription>
+            Track your progress through this plan.
+          </CardDescription>
+        </CardHeader>
 
-      <div className='grid gap-4 md:grid-cols-3'>
-        <Card>
-          <CardHeader>
-            <CardTitle className='text-muted-foreground text-sm font-medium'>
-              Tasks
-            </CardTitle>
-          </CardHeader>
+        <CardContent>
+          <div className='grid gap-4 sm:grid-cols-4'>
+            <div>
+              <p className='text-muted-foreground text-sm'>Total Tasks</p>
+              <p className='mt-1 text-2xl font-bold'>{tasks.length}</p>
+            </div>
 
-          <CardContent>
-            <p className='text-3xl font-bold'>{tasks.length}</p>
-          </CardContent>
-        </Card>
+            <div>
+              <p className='text-muted-foreground text-sm'>Completed</p>
+              <p className='mt-1 text-2xl font-bold'>{completedTasks}</p>
+            </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className='text-muted-foreground text-sm font-medium'>
-              Completed
-            </CardTitle>
-          </CardHeader>
+            <div>
+              <p className='text-muted-foreground text-sm'>Remaining</p>
+              <p className='mt-1 text-2xl font-bold'>
+                {tasks.length - completedTasks}
+              </p>
+            </div>
 
-          <CardContent>
-            <p className='text-3xl font-bold'>{completedTasks}</p>
-          </CardContent>
-        </Card>
+            <div>
+              <p className='text-muted-foreground text-sm'>Progress</p>
+              <p className='mt-1 text-2xl font-bold'>{progress}%</p>
+            </div>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className='text-muted-foreground text-sm font-medium'>
-              Progress
-            </CardTitle>
-          </CardHeader>
+          <div className='mt-6 space-y-2'>
+            <div className='flex items-center justify-between text-sm'>
+              <span className='text-muted-foreground'>Overall progress</span>
 
-          <CardContent>
-            <p className='text-3xl font-bold'>{progress}%</p>
-          </CardContent>
-        </Card>
-      </div>
+              <span className='font-medium'>
+                {completedTasks} / {tasks.length}
+              </span>
+            </div>
 
-      {/* Task Execution */}
+            <div className='bg-muted h-2 overflow-hidden rounded-full'>
+              <div
+                className='bg-primary h-full rounded-full transition-all'
+                style={{
+                  width: `${progress}%`,
+                }}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
+      {/* Current Task */}
       {activeTask && (
         <TaskExecutionCard
           key={activeTask.id}
@@ -260,30 +241,16 @@ export default function PlanDetailsPage() {
         />
       )}
 
-      {/* Plan Complete */}
-
-      {!activeTask && tasks.length > 0 && completedTasks === tasks.length && (
-        <Card>
-          <CardContent className='flex flex-col items-center justify-center gap-3 py-10 text-center'>
-            <div className='text-lg font-semibold'>Plan completed</div>
-
-            <p className='text-muted-foreground text-sm'>
-              You completed all tasks in this plan.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Tasks */}
-
       <Card>
         <CardHeader>
-          <div className='flex items-center justify-between gap-4'>
+          <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
             <div>
               <CardTitle>Tasks</CardTitle>
 
               <CardDescription>
-                Work through your tasks in order.
+                Complete each task in order. Start the next task manually when
+                you are ready.
               </CardDescription>
             </div>
 
@@ -300,27 +267,26 @@ export default function PlanDetailsPage() {
 
         <CardContent>
           {tasks.length === 0 ? (
-            <div className='rounded-lg border border-dashed p-8 text-center'>
-              <p className='text-muted-foreground text-sm'>No tasks yet.</p>
+            <div className='text-muted-foreground rounded-lg border border-dashed p-8 text-center'>
+              <p className='font-medium'>No tasks yet</p>
 
-              <p className='text-muted-foreground mt-1 text-sm'>
-                Add your first task to this plan.
+              <p className='mt-1 text-sm'>
+                Add your first task to start working on this plan.
               </p>
             </div>
           ) : (
-            <div className='space-y-3'>
+            <div className='space-y-6'>
               {tasks.map((task, index) => (
-                <div key={task.id} className='rounded-lg border p-4'>
-                  <TaskList
-                    task={task}
-                    index={index}
-                    updateTask={updateTask}
-                    handleMoveTask={handleMoveTask}
-                    deleteTask={deleteTask}
-                    tasks={tasks}
-                    onToggleComplete={() => handleManualComplete(task)}
-                  />
-                </div>
+                <TaskList
+                  key={task.id}
+                  task={task}
+                  index={index}
+                  tasks={tasks}
+                  updateTask={updateTask}
+                  handleMoveTask={handleMoveTask}
+                  deleteTask={deleteTask}
+                  onToggleComplete={() => handleManualComplete(task)}
+                />
               ))}
             </div>
           )}
@@ -328,14 +294,14 @@ export default function PlanDetailsPage() {
       </Card>
 
       {/* Delete Plan Dialog */}
-
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete this plan?</DialogTitle>
+            <DialogTitle>Delete plan?</DialogTitle>
 
             <DialogDescription>
-              This will permanently delete "{plan.title}" and its tasks.
+              This will permanently delete "{plan.title}" and all of its tasks.
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
 
