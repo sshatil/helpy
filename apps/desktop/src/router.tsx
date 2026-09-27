@@ -3,6 +3,7 @@ import { AppLayout } from './layouts/app-layout';
 import DashboardPage from './pages/dashboard-page';
 import PlansPage from './pages/plans-page';
 import PlanDetailsPage from './pages/plan-details-page';
+import HistoryPage from './pages/history-page';
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,10 @@ export const router = createBrowserRouter([
       {
         path: 'study/plans/:planId',
         element: <PlanDetailsPage />,
+      },
+      {
+        path: 'history',
+        element: <HistoryPage />,
       },
     ],
   },

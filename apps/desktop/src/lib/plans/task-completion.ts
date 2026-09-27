@@ -2,6 +2,8 @@ import { createExecutionHistory } from '../history/history-repository';
 
 import { sendTaskCompletionNotification } from '../notifications/task-notifications';
 
+import { getPlanById } from './plan-storage';
+
 import type { Task, TaskExecution } from './types';
 
 export async function handleTaskCompletion(
@@ -19,10 +21,13 @@ export async function handleTaskCompletion(
 
   const actualDuration = Math.round(actualSeconds / 60);
 
+  const plan = getPlanById(task.planId);
+
   await createExecutionHistory({
     id: crypto.randomUUID(),
     taskId: task.id,
     planId: task.planId,
+    planTitle: plan?.title ?? 'Unknown plan',
     taskTitle: task.title,
     plannedDuration,
     startedAt: execution.startedAt,
