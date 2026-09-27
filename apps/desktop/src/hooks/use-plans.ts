@@ -1,54 +1,78 @@
-import { useCallback, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
-  createPlan as createStoredPlan,
-  deletePlan as deleteStoredPlan,
-  getPlans,
-  updatePlan as updateStoredPlan,
-} from '../lib/plans/plan-storage';
-import { Plan } from '../lib/plans/types';
+  createPlan,
+  deletePlan,
+  getAllPlans,
+  updatePlan,
+} from '../lib/plans/plan-repository';
+
+import type {
+  CreatePlanInput,
+  UpdatePlanInput,
+} from '../lib/plans/plan-repository';
+import { queryKeys } from '../lib/query/query-keys';
 
 export function usePlans() {
-  const [plans, setPlans] = useState<Plan[]>(() => getPlans());
+  const queryClient = useQueryClient();
 
-  const createPlan = useCallback(
-    (data: Pick<Plan, 'title' | 'description'>) => {
-      const plan = createStoredPlan(data);
+  const plansQuery = useQuery({
+    queryKey: queryKeys.plans.all,
+    queryFn: getAllPlans,
+  });
 
-      setPlans((currentPlans) => [...currentPlans, plan]);
+  const createPlanMutation = useMutation({
+    mutationFn: (data: CreatePlanInput) => createPlan(data),
 
-      return plan;
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.plans.all,
+      });
     },
-    [],
-  );
+  });
 
-  const updatePlan = useCallback(
-    (id: string, data: Partial<Pick<Plan, 'title' | 'description'>>) => {
-      const updatedPlan = updateStoredPlan(id, data);
+  const updatePlanMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdatePlanInput }) =>
+      updatePlan(id, data),
 
-      if (!updatedPlan) {
-        return undefined;
-      }
-
-      setPlans((currentPlans) =>
-        currentPlans.map((plan) => (plan.id === id ? updatedPlan : plan)),
-      );
-
-      return updatedPlan;
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.plans.all,
+      });
     },
-    [],
-  );
+  });
 
-  const deletePlan = useCallback((id: string) => {
-    deleteStoredPlan(id);
+  const deletePlanMutation = useMutation({
+    mutationFn: (id: string) => deletePlan(id),
 
-    setPlans((currentPlans) => currentPlans.filter((plan) => plan.id !== id));
-  }, []);
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.plans.all,
+      });
+    },
+  });
 
   return {
-    plans,
-    createPlan,
-    updatePlan,
-    deletePlan,
+    plans: plansQuery.data ?? [],
+
+    isLoading: plansQuery.isLoading,
+
+    isFetching: plansQuery.isFetching,
+
+    error: plansQuery.error,
+
+    refetch: plansQuery.refetch,
+
+    createPlan: createPlanMutation.mutate,
+
+    updatePlan: updatePlanMutation.mutate,
+
+    deletePlan: deletePlanMutation.mutate,
+
+    isCreating: createPlanMutation.isPending,
+
+    isUpdating: updatePlanMutation.isPending,
+
+    isDeleting: deletePlanMutation.isPending,
   };
 }
