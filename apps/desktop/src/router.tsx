@@ -4,6 +4,7 @@ import DashboardPage from './pages/dashboard-page';
 import PlansPage from './pages/plans-page';
 import PlanDetailsPage from './pages/plan-details-page';
 import HistoryPage from './pages/history-page';
+import SettingsPage from './pages/settings-page';
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ export const router = createBrowserRouter([
       {
         path: 'history',
         element: <HistoryPage />,
+      },
+      {
+        path: 'settings',
+        element: <SettingsPage />,
       },
     ],
   },
