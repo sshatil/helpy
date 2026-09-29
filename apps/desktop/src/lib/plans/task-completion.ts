@@ -1,3 +1,6 @@
+import { queryClient } from '../query/query-client';
+import { queryKeys } from '../query/query-keys';
+
 import { createExecutionHistory } from '../history/history-repository';
 
 import { sendTaskCompletionNotification } from '../notifications/task-notifications';
@@ -33,6 +36,10 @@ export async function handleTaskCompletion(
     startedAt: execution.startedAt,
     completedAt,
     actualDuration,
+  });
+
+  await queryClient.invalidateQueries({
+    queryKey: queryKeys.history.all,
   });
 
   await sendTaskCompletionNotification(task.title);

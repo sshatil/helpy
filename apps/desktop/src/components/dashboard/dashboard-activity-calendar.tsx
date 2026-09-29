@@ -137,7 +137,7 @@ export function DashboardActivityCalendar({
             </div>
 
             <TooltipProvider>
-              <div className='flex w-full gap-1'>
+              <div className='flex w-full gap-1 px-2'>
                 {weeks.map((week, weekIndex) => (
                   <div
                     key={weekIndex}
