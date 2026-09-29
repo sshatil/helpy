@@ -18,6 +18,7 @@ import { DashboardOverallProductivity } from '../components/dashboard/dashboard-
 import { DashboardRecentActivity } from '../components/dashboard/dashboard-recent-activity';
 import { DashboardStatistics } from '../components/dashboard/dashboard-statistics';
 import { DashboardTodayProgress } from '../components/dashboard/dashboard-today-progress';
+import { DashboardActivityCalendar } from '../components/dashboard/dashboard-activity-calendar';
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -133,6 +134,10 @@ export default function DashboardPage() {
         completedPlans={completedPlans}
       />
 
+      <div className=''>
+        <DashboardActivityCalendar history={history} />
+      </div>
+
       <div className='grid gap-6 lg:grid-cols-2'>
         <DashboardTodayProgress
           completedTasks={todayCompletedTasks}
@@ -151,7 +156,6 @@ export default function DashboardPage() {
         task={activeTask}
         isLoading={isActiveTaskLoading}
       />
-
       <DashboardRecentActivity activities={recentActivity} />
     </div>
   );
