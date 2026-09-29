@@ -1,109 +1,52 @@
-import { Laptop, Moon, Sun } from 'lucide-react';
+import { Monitor, Moon, Sun } from 'lucide-react';
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@repo/ui/components/ui/select';
-
-import { useSettings } from '../../hooks/use-settings';
-
-import type { AppTheme } from '../../lib/settings/types';
-
-import { SettingsSection } from './settings-section';
-
-const THEME_OPTIONS: {
-  value: AppTheme;
-  label: string;
-  description: string;
-  icon: typeof Sun;
-}[] = [
-  {
-    value: 'system',
-    label: 'System',
-    description: 'Follow your operating system preference.',
-    icon: Laptop,
-  },
-  {
-    value: 'light',
-    label: 'Light',
-    description: 'Use the light appearance.',
-    icon: Sun,
-  },
-  {
-    value: 'dark',
-    label: 'Dark',
-    description: 'Use the dark appearance.',
-    icon: Moon,
-  },
-];
+import { Button } from '@repo/ui/components/ui/button';
+import { useTheme } from '../theme-provider';
 
 export function AppearanceSettings() {
-  const { settings, updateSettings, isUpdating } = useSettings();
-
-  const theme = settings?.appearance.theme ?? 'system';
-
-  function handleThemeChange(value: string) {
-    if (!settings) {
-      return;
-    }
-
-    updateSettings({
-      ...settings,
-
-      appearance: {
-        ...settings.appearance,
-        theme: value as AppTheme,
-      },
-    });
-  }
-
-  const selectedTheme = THEME_OPTIONS.find((option) => option.value === theme);
-
-  const SelectedIcon = selectedTheme?.icon ?? Laptop;
+  const { theme, setTheme } = useTheme();
 
   return (
-    <SettingsSection
-      title='Appearance'
-      description='Choose how the application looks.'
-    >
-      <div className='rounded-lg border'>
-        <div className='flex items-center justify-between gap-4 p-4'>
-          <div className='flex min-w-0 items-center gap-3'>
-            <div className='bg-muted flex size-9 shrink-0 items-center justify-center rounded-lg'>
-              <SelectedIcon className='size-4' />
-            </div>
+    <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+      <div className='space-y-1'>
+        <h3 className='text-sm font-medium'>Appearance</h3>
 
-            <div>
-              <p className='text-sm font-medium'>Theme</p>
-
-              <p className='text-muted-foreground mt-1 text-sm'>
-                {selectedTheme?.description}
-              </p>
-            </div>
-          </div>
-
-          <Select
-            value={theme}
-            onValueChange={handleThemeChange}
-            disabled={!settings || isUpdating}
-          >
-            <SelectTrigger className='w-[130px]'>
-              <SelectValue />
-            </SelectTrigger>
-
-            <SelectContent>
-              {THEME_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <p className='text-muted-foreground text-sm'>
+          Choose how the application looks.
+        </p>
       </div>
-    </SettingsSection>
+
+      <div className='flex items-center rounded-lg border p-1'>
+        <Button
+          variant={theme === 'light' ? 'default' : 'ghost'}
+          size='sm'
+          onClick={() => setTheme('light')}
+          className='gap-2'
+        >
+          <Sun className='size-4' />
+          <span className='hidden sm:inline'>Light</span>
+        </Button>
+
+        <Button
+          variant={theme === 'dark' ? 'default' : 'ghost'}
+          size='sm'
+          onClick={() => setTheme('dark')}
+          className='gap-2'
+        >
+          <Moon className='size-4' />
+          <span className='hidden sm:inline'>Dark</span>
+        </Button>
+
+        <Button
+          variant={theme === 'system' ? 'default' : 'ghost'}
+          size='sm'
+          onClick={() => setTheme('system')}
+          className='gap-2'
+        >
+          <Monitor className='size-4' />
+          <span className='hidden sm:inline'>System</span>
+        </Button>
+      </div>
+    </div>
   );
 }

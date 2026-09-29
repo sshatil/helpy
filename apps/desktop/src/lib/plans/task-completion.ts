@@ -2,6 +2,7 @@ import { queryClient } from '../query/query-client';
 import { queryKeys } from '../query/query-keys';
 
 import { createExecutionHistory } from '../history/history-repository';
+import { getSettings } from '../settings/settings-storage';
 
 import { sendTaskCompletionNotification } from '../notifications/task-notifications';
 
@@ -42,5 +43,9 @@ export async function handleTaskCompletion(
     queryKey: queryKeys.history.all,
   });
 
-  await sendTaskCompletionNotification(task.title);
+  const settings = getSettings();
+
+  if (settings.notifications.taskCompletion) {
+    await sendTaskCompletionNotification(task.title);
+  }
 }

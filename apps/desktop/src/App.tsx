@@ -4,10 +4,14 @@ import { RouterProvider } from 'react-router-dom';
 import { queryClient } from './lib/query/query-client';
 import { router } from './router';
 
+import { ThemeProvider } from './components/theme-provider';
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <ThemeProvider defaultTheme='dark' storageKey='helpy-theme'>
+        <RouterProvider router={router} />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
