@@ -10,13 +10,19 @@ export const FOCUS_SOUNDS: FocusSound[] = [
     id: 'rain',
     name: 'Rain',
     description: 'Soft rainfall for a calm focus session.',
-    src: '/sounds/light-rain.wav',
+    src: '/sounds/rain.mp3',
   },
   {
     id: 'thunder-rain',
     name: 'Rain with thunder',
     description: 'Soft thunder rainfall for a calm focus session.',
-    src: '/sounds/rain-and-thunder.wav',
+    src: '/sounds/thunder-with-rain.mp3',
+  },
+  {
+    id: 'lofi-relaxation',
+    name: 'Lofi Relaxation',
+    description: 'Lofi relaxation for a calm focus session.',
+    src: '/sounds/lofi-relaxation.mp3',
   },
 ];
 

@@ -1,4 +1,5 @@
-export type FocusSoundId = 'none' | 'rain' | 'thunder-rain';
+export type FocusSoundId =
+  'none' | 'rain' | 'thunder-rain' | 'rain-thunder' | 'lofi-relaxation';
 
 export type FocusSound = {
   id: FocusSoundId;

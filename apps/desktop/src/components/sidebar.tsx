@@ -8,6 +8,7 @@ import {
 import { NavLink } from 'react-router-dom';
 import { Button } from '@repo/ui/components/ui/button';
 import { Separator } from '@repo/ui/components/ui/separator';
+import { FocusAudioPlayer } from './focus-audio/focus-audio-player';
 
 const mainNavigation = [
   {
@@ -85,6 +86,11 @@ export function AppSidebar() {
         </nav>
 
         <div className='mt-auto'>
+          <Separator className='mb-3' />
+          <div className='mb-4'>
+            <FocusAudioPlayer />
+          </div>
+
           <Separator className='mb-3' />
 
           <nav className='space-y-1'>
