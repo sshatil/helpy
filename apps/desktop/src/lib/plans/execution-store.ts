@@ -4,7 +4,7 @@ import {
   setTaskExecution,
 } from './execution-storage';
 
-import { getTaskById, updateTask } from './task-storage';
+import { getTask, updateTask } from './task-repository';
 
 import { queryClient } from '../query/query-client';
 import { queryKeys } from '../query/query-keys';
@@ -83,7 +83,6 @@ function clearTimers() {
 
   if (completionTimeout) {
     clearTimeout(completionTimeout);
-
     completionTimeout = undefined;
   }
 }
@@ -137,12 +136,12 @@ async function completeCurrentTask() {
 
   const taskId = currentExecution.taskId;
 
-  const task = getTaskById(taskId);
-
   clearTimers();
 
+  const task = await getTask(taskId);
+
   if (task) {
-    updateTask(taskId, {
+    await updateTask(taskId, {
       status: 'completed',
       completed: true,
     });
@@ -199,7 +198,7 @@ function ensureExecutionIsValid() {
   scheduleCompletion();
 }
 
-function startTask(task: Task) {
+async function startTask(task: Task) {
   if (task.completed) {
     return;
   }
@@ -219,10 +218,10 @@ function startTask(task: Task) {
   ) {
     const remaining = getRemainingSeconds(execution);
 
-    const previousTask = getTaskById(execution.taskId);
+    const previousTask = await getTask(execution.taskId);
 
     if (previousTask) {
-      updateTask(execution.taskId, {
+      await updateTask(execution.taskId, {
         status: 'paused',
         completed: false,
       });
@@ -254,7 +253,7 @@ function startTask(task: Task) {
     updatedAt: startedAt,
   };
 
-  updateTask(task.id, {
+  await updateTask(task.id, {
     status: 'running',
     completed: false,
   });
@@ -268,14 +267,14 @@ function startTask(task: Task) {
   scheduleCompletion();
 }
 
-function pauseTask() {
+async function pauseTask() {
   if (!execution || execution.status !== 'running') {
     return;
   }
 
   const remaining = getRemainingSeconds(execution);
 
-  const task = getTaskById(execution.taskId);
+  const task = await getTask(execution.taskId);
 
   clearTimers();
 
@@ -290,7 +289,7 @@ function pauseTask() {
   persist();
 
   if (task) {
-    updateTask(execution.taskId, {
+    await updateTask(execution.taskId, {
       status: 'paused',
       completed: false,
     });
@@ -301,7 +300,7 @@ function pauseTask() {
   emit();
 }
 
-function resumeTask() {
+async function resumeTask() {
   if (!execution || execution.status !== 'paused') {
     return;
   }
@@ -310,7 +309,7 @@ function resumeTask() {
     return;
   }
 
-  const task = getTaskById(execution.taskId);
+  const task = await getTask(execution.taskId);
 
   const endAt = new Date(
     Date.now() + execution.remainingSeconds * 1000,
@@ -326,7 +325,7 @@ function resumeTask() {
   persist();
 
   if (task) {
-    updateTask(execution.taskId, {
+    await updateTask(execution.taskId, {
       status: 'running',
       completed: false,
     });
@@ -339,14 +338,14 @@ function resumeTask() {
   scheduleCompletion();
 }
 
-function stopTask() {
+async function stopTask() {
   if (!execution) {
     return;
   }
 
   const taskId = execution.taskId;
 
-  const task = getTaskById(taskId);
+  const task = await getTask(taskId);
 
   clearTimers();
 
@@ -357,7 +356,7 @@ function stopTask() {
   completedTaskId = undefined;
 
   if (task) {
-    updateTask(taskId, {
+    await updateTask(taskId, {
       status: 'ready',
       completed: false,
     });
@@ -368,8 +367,8 @@ function stopTask() {
   emit();
 }
 
-function resetTask(taskId: string) {
-  const task = getTaskById(taskId);
+async function resetTask(taskId: string) {
+  const task = await getTask(taskId);
 
   if (!task) {
     if (completedTaskId === taskId) {
@@ -389,7 +388,7 @@ function resetTask(taskId: string) {
     clearTaskExecution();
   }
 
-  updateTask(taskId, {
+  await updateTask(taskId, {
     status: 'ready',
     completed: false,
   });

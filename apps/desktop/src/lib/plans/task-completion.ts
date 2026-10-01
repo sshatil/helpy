@@ -6,7 +6,7 @@ import { getSettings } from '../settings/settings-storage';
 
 import { sendTaskCompletionNotification } from '../notifications/task-notifications';
 
-import { getPlanById } from './plan-storage';
+import { getPlanById } from './plan-repository';
 
 import type { Task, TaskExecution } from './types';
 
@@ -25,7 +25,7 @@ export async function handleTaskCompletion(
 
   const actualDuration = Math.round(actualSeconds / 60);
 
-  const plan = getPlanById(task.planId);
+  const plan = await getPlanById(task.planId);
 
   await createExecutionHistory({
     id: crypto.randomUUID(),

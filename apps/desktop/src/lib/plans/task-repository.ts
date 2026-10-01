@@ -1,11 +1,5 @@
-import {
-  createTask as createStoredTask,
-  deleteTask as deleteStoredTask,
-  getTaskById,
-  getTasksByPlanId,
-  reorderTasks as reorderStoredTasks,
-  updateTask as updateStoredTask,
-} from './task-storage';
+import { supabase } from '../supabase/supabase-client';
+import { mapTask } from '../supabase/mappers';
 
 import type { Task } from './types';
 
@@ -18,34 +12,133 @@ export type UpdateTaskInput = Partial<
   Pick<Task, 'title' | 'duration' | 'notes' | 'links' | 'completed' | 'status'>
 >;
 
-export function getTasks(planId: string): Promise<Task[]> {
-  return Promise.resolve(getTasksByPlanId(planId));
+export async function getTasks(planId: string): Promise<Task[]> {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('plan_id', planId)
+    .order('task_order', {
+      ascending: true,
+    });
+
+  if (error) {
+    throw error;
+  }
+
+  return data.map(mapTask);
 }
 
-export function getTask(taskId: string): Promise<Task | undefined> {
-  return Promise.resolve(getTaskById(taskId));
+export async function getTask(taskId: string): Promise<Task | undefined> {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('id', taskId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data ? mapTask(data) : undefined;
 }
 
-export function createTask(data: CreateTaskInput): Promise<Task> {
-  return Promise.resolve(createStoredTask(data));
+export async function createTask(data: CreateTaskInput): Promise<Task> {
+  const { data: task, error } = await supabase
+    .from('tasks')
+    .insert({
+      plan_id: data.planId,
+      title: data.title,
+      duration: data.duration,
+      notes: data.notes ?? null,
+      links: data.links,
+      task_order: 0,
+      completed: false,
+      status: 'ready',
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return mapTask(task);
 }
 
-export function updateTask(
+export async function updateTask(
   id: string,
   data: UpdateTaskInput,
 ): Promise<Task | undefined> {
-  return Promise.resolve(updateStoredTask(id, data));
+  const { data: task, error } = await supabase
+    .from('tasks')
+    .update({
+      ...(data.title !== undefined
+        ? {
+            title: data.title,
+          }
+        : {}),
+      ...(data.duration !== undefined
+        ? {
+            duration: data.duration,
+          }
+        : {}),
+      ...(data.notes !== undefined
+        ? {
+            notes: data.notes ?? null,
+          }
+        : {}),
+      ...(data.links !== undefined
+        ? {
+            links: data.links,
+          }
+        : {}),
+      ...(data.completed !== undefined
+        ? {
+            completed: data.completed,
+          }
+        : {}),
+      ...(data.status !== undefined
+        ? {
+            status: data.status,
+          }
+        : {}),
+    })
+    .eq('id', id)
+    .select()
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return task ? mapTask(task) : undefined;
 }
 
-export function deleteTask(id: string): Promise<void> {
-  deleteStoredTask(id);
+export async function deleteTask(id: string): Promise<void> {
+  const { error } = await supabase.from('tasks').delete().eq('id', id);
 
-  return Promise.resolve();
+  if (error) {
+    throw error;
+  }
 }
 
-export function reorderTasks(
+export async function reorderTasks(
   planId: string,
   taskIds: string[],
 ): Promise<Task[]> {
-  return Promise.resolve(reorderStoredTasks(planId, taskIds));
+  for (const [index, taskId] of taskIds.entries()) {
+    const { error } = await supabase
+      .from('tasks')
+      .update({
+        task_order: index,
+      })
+      .eq('id', taskId)
+      .eq('plan_id', planId);
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  return getTasks(planId);
 }
