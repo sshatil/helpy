@@ -106,6 +106,37 @@ export function GoogleLoginPage() {
             automatically.
           </p>
         ) : null}
+
+        {/* Dev Mode Fallback: macOS LaunchServices routes deep links to the .app bundle 
+            instead of the running tauri:dev instance. This lets developers paste the URL. */}
+        {import.meta.env.DEV && isSigningIn ? (
+          <div className='mt-8 pt-4 border-t border-border'>
+            <p className='text-xs text-muted-foreground mb-2 text-center'>
+              Dev Mode: If the app doesn't detect the login, copy the helpy:// URL from your browser and paste it here:
+            </p>
+            <input
+              type='text'
+              placeholder='Paste helpy://auth/callback?code=...'
+              className='w-full text-xs p-2 rounded bg-background border border-input focus:ring-1 focus:ring-primary outline-none'
+              onChange={async (e) => {
+                const url = e.target.value;
+                if (url.includes('code=')) {
+                  try {
+                    const parsed = new URL(url);
+                    const code = parsed.searchParams.get('code');
+                    if (code) {
+                      await import('../../lib/supabase/supabase-client').then(({ supabase }) => 
+                        supabase.auth.exchangeCodeForSession(code)
+                      );
+                    }
+                  } catch (err) {
+                    console.error('Manual code exchange failed', err);
+                  }
+                }
+              }}
+            />
+          </div>
+        ) : null}
       </div>
     </div>
   );

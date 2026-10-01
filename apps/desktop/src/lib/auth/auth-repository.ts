@@ -17,7 +17,9 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: 'helpy://auth/callback',
+      redirectTo: import.meta.env.DEV 
+        ? 'http://localhost:1420/auth/callback' 
+        : 'helpy://auth/callback',
       skipBrowserRedirect: true,
       queryParams: {
         access_type: 'offline',

@@ -8,12 +8,17 @@ import PlanDetailsPage from './pages/plan-details-page';
 import HistoryPage from './pages/history-page';
 import SettingsPage from './pages/settings-page';
 import { GoogleLoginPage } from './pages/auth/google-login-page';
+import { DevAuthCallbackPage } from './pages/auth/dev-auth-callback-page';
 import { ProtectedRoute } from './components/protected-route';
 
 export const router = createBrowserRouter([
   {
     path: '/login',
     element: <GoogleLoginPage />,
+  },
+  {
+    path: '/auth/callback',
+    element: <DevAuthCallbackPage />,
   },
 
   {
