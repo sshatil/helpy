@@ -19,4 +19,13 @@ if (!supabasePublishableKey) {
 export const supabase = createClient<Database>(
   supabaseUrl,
   supabasePublishableKey,
+  {
+    auth: {
+      flowType: 'pkce',
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false,
+      storage: globalThis.localStorage,
+    },
+  },
 );

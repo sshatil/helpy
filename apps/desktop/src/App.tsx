@@ -5,12 +5,15 @@ import { queryClient } from './lib/query/query-client';
 import { router } from './router';
 
 import { ThemeProvider } from './components/theme-provider';
+import { AuthProvider } from './lib/auth/auth-context';
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme='dark' storageKey='helpy-theme'>
-        <RouterProvider router={router} />
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

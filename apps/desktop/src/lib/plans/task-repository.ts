@@ -2,6 +2,7 @@ import { supabase } from '../supabase/supabase-client';
 import { mapTask } from '../supabase/mappers';
 
 import type { Task } from './types';
+import { getCurrentUser } from '../auth/auth-repository';
 
 export type CreateTaskInput = Omit<
   Task,
@@ -43,9 +44,14 @@ export async function getTask(taskId: string): Promise<Task | undefined> {
 }
 
 export async function createTask(data: CreateTaskInput): Promise<Task> {
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new Error('You must be authenticated to create a task.');
+  }
   const { data: task, error } = await supabase
     .from('tasks')
     .insert({
+      user_id: user.id,
       plan_id: data.planId,
       title: data.title,
       duration: data.duration,

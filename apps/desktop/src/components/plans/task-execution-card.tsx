@@ -31,7 +31,7 @@ function formatTime(seconds: number) {
 
 export function TaskExecutionCard({
   task,
-  onComplete,
+  // onComplete,
   onNextTask,
   onReset,
 }: TaskExecutionCardProps) {
@@ -61,9 +61,6 @@ export function TaskExecutionCard({
    * onComplete is only notified when the task
    * transitions into the completed state.
    */
-  function handleComplete() {
-    onComplete?.();
-  }
 
   function handleReset() {
     /*

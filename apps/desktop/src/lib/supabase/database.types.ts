@@ -21,6 +21,7 @@ export type Database = {
           id: string
           title: string
           updated_at: string
+          user_id: string
         }
         Insert: {
           created_at?: string
@@ -28,6 +29,7 @@ export type Database = {
           id?: string
           title: string
           updated_at?: string
+          user_id: string
         }
         Update: {
           created_at?: string
@@ -35,6 +37,7 @@ export type Database = {
           id?: string
           title?: string
           updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -50,6 +53,7 @@ export type Database = {
           started_at: string
           task_id: string
           task_title: string
+          user_id: string
         }
         Insert: {
           actual_duration: number
@@ -62,6 +66,7 @@ export type Database = {
           started_at: string
           task_id: string
           task_title: string
+          user_id: string
         }
         Update: {
           actual_duration?: number
@@ -74,6 +79,7 @@ export type Database = {
           started_at?: string
           task_id?: string
           task_title?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -105,6 +111,7 @@ export type Database = {
           task_order: number
           title: string
           updated_at: string
+          user_id: string
         }
         Insert: {
           completed?: boolean
@@ -118,6 +125,7 @@ export type Database = {
           task_order?: number
           title: string
           updated_at?: string
+          user_id: string
         }
         Update: {
           completed?: boolean
@@ -131,6 +139,7 @@ export type Database = {
           task_order?: number
           title?: string
           updated_at?: string
+          user_id?: string
         }
         Relationships: [
           {

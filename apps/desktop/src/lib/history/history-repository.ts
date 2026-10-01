@@ -2,6 +2,7 @@ import { supabase } from '../supabase/supabase-client';
 import { mapHistory } from '../supabase/mappers';
 
 import type { TaskExecutionHistory } from './types';
+import { getCurrentUser } from '../auth/auth-repository';
 
 export async function getAllExecutionHistory(): Promise<
   TaskExecutionHistory[]
@@ -23,9 +24,15 @@ export async function getAllExecutionHistory(): Promise<
 export async function createExecutionHistory(
   data: TaskExecutionHistory,
 ): Promise<TaskExecutionHistory> {
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new Error('User is not authenticated.');
+  }
+
   const { data: history, error } = await supabase
     .from('task_execution_history')
     .insert({
+      user_id: user.id,
       task_id: data.taskId,
       plan_id: data.planId,
       plan_title: data.planTitle,

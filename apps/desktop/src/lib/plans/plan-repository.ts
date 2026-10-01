@@ -1,3 +1,4 @@
+import { getCurrentUser } from '../auth/auth-repository';
 import { mapPlan } from '../supabase/mappers';
 import { supabase } from '../supabase/supabase-client';
 
@@ -37,19 +38,22 @@ export async function getPlanById(id: string): Promise<Plan | undefined> {
 }
 
 export async function createPlan(data: CreatePlanInput): Promise<Plan> {
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new Error('You must be authenticated to create a plan.');
+  }
   const { data: plan, error } = await supabase
     .from('plans')
     .insert({
+      user_id: user.id,
       title: data.title,
       description: data.description ?? null,
     })
     .select()
     .single();
-
   if (error) {
     throw error;
   }
-
   return mapPlan(plan);
 }
 
