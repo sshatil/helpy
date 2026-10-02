@@ -48,6 +48,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          is_public: boolean
           updated_at: string
           username: string | null
         }
@@ -57,6 +58,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          is_public?: boolean
           updated_at?: string
           username?: string | null
         }
@@ -66,6 +68,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_public?: boolean
           updated_at?: string
           username?: string | null
         }
@@ -186,7 +189,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_public_profile: { Args: { profile_username: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
