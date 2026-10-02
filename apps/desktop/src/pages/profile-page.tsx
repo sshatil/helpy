@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import {
   Card,
@@ -14,6 +14,7 @@ import { useAuth } from '../lib/auth/auth-context';
 
 import { ProfileForm } from '../components/profile/profile-form';
 import { ProfileHeader } from '../components/profile/profile-header';
+import { Button } from '@repo/ui/components/ui/button';
 
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) {
@@ -68,12 +69,21 @@ export default function ProfilePage() {
 
   return (
     <div className='mx-auto w-full max-w-3xl p-6'>
-      <div className='mb-6'>
-        <h1 className='text-2xl font-semibold tracking-tight'>Profile</h1>
+      <div className='mb-6 flex items-center justify-between'>
+        <div className=''>
+          <h1 className='text-2xl font-semibold tracking-tight'>Profile</h1>
 
-        <p className='text-muted-foreground mt-1 text-sm'>
-          Manage your Helpy profile information.
-        </p>
+          <p className='text-muted-foreground mt-1 text-sm'>
+            Manage your Helpy profile information.
+          </p>
+        </div>
+        {profile.username && (
+          <Button asChild variant='outline' className='mt-4'>
+            <Link to={`/helpy/${profile.username}`} rel='noreferrer'>
+              View public profile
+            </Link>
+          </Button>
+        )}
       </div>
 
       <Card>

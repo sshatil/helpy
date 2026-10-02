@@ -11,6 +11,7 @@ import { GoogleLoginPage } from './pages/auth/google-login-page';
 import { DevAuthCallbackPage } from './pages/auth/dev-auth-callback-page';
 import { ProtectedRoute } from './components/protected-route';
 import ProfilePage from './pages/profile-page';
+import PublicProfilePage from './pages/public-profile-page';
 
 export const router = createBrowserRouter([
   {
@@ -21,7 +22,10 @@ export const router = createBrowserRouter([
     path: '/auth/callback',
     element: <DevAuthCallbackPage />,
   },
-
+  {
+    path: 'helpy/:username',
+    element: <PublicProfilePage />,
+  },
   {
     element: <ProtectedRoute />,
     children: [
