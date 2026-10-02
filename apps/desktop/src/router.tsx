@@ -10,6 +10,7 @@ import SettingsPage from './pages/settings-page';
 import { GoogleLoginPage } from './pages/auth/google-login-page';
 import { DevAuthCallbackPage } from './pages/auth/dev-auth-callback-page';
 import { ProtectedRoute } from './components/protected-route';
+import ProfilePage from './pages/profile-page';
 
 export const router = createBrowserRouter([
   {
@@ -51,6 +52,10 @@ export const router = createBrowserRouter([
           {
             path: 'settings',
             element: <SettingsPage />,
+          },
+          {
+            path: 'profile',
+            element: <ProfilePage />,
           },
         ],
       },
