@@ -1,3 +1,4 @@
+import { mapSupabaseError } from '../errors/supabase-error';
 import { supabase } from '../supabase/supabase-client';
 
 export async function getCurrentUser() {
@@ -7,7 +8,7 @@ export async function getCurrentUser() {
   } = await supabase.auth.getUser();
 
   if (error) {
-    throw error;
+    throw mapSupabaseError(error);
   }
 
   return user;
@@ -17,8 +18,8 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: import.meta.env.DEV 
-        ? 'http://localhost:1420/auth/callback' 
+      redirectTo: import.meta.env.DEV
+        ? 'http://localhost:1420/auth/callback'
         : 'helpy://auth/callback',
       skipBrowserRedirect: true,
       queryParams: {
@@ -29,7 +30,7 @@ export async function signInWithGoogle() {
   });
 
   if (error) {
-    throw error;
+    throw mapSupabaseError(error);
   }
 
   if (!data.url) {
@@ -43,6 +44,6 @@ export async function signOut(): Promise<void> {
   const { error } = await supabase.auth.signOut();
 
   if (error) {
-    throw error;
+    throw mapSupabaseError(error);
   }
 }
