@@ -220,7 +220,7 @@ export function PublicProfileActivity({
             <CardTitle>Activity</CardTitle>
 
             <CardDescription>
-              Task completion activity over the last 12 weeks.
+              Task completion activity over the last year.
             </CardDescription>
           </div>
 

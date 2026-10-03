@@ -39,6 +39,11 @@ const mainNavigation = [
     icon: History,
   },
   {
+    label: 'Community',
+    to: '/community',
+    icon: User,
+  },
+  {
     label: 'Settings',
     to: '/settings',
     icon: Settings,

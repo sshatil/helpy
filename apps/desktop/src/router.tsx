@@ -12,6 +12,7 @@ import { DevAuthCallbackPage } from './pages/auth/dev-auth-callback-page';
 import { ProtectedRoute } from './components/protected-route';
 import ProfilePage from './pages/profile-page';
 import PublicProfilePage from './pages/public-profile-page';
+import { CommunityPage } from './pages/community-page';
 
 export const router = createBrowserRouter([
   {
@@ -60,6 +61,10 @@ export const router = createBrowserRouter([
           {
             path: 'profile',
             element: <ProfilePage />,
+          },
+          {
+            path: 'community',
+            element: <CommunityPage />,
           },
         ],
       },
