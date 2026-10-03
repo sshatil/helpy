@@ -190,6 +190,16 @@ export type Database = {
     }
     Functions: {
       get_public_profile: { Args: { profile_username: string }; Returns: Json }
+      search_public_profiles: {
+        Args: { search_query: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          display_name: string
+          id: string
+          username: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
