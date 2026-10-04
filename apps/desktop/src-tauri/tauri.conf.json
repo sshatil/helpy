@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "helpy",
+  "productName": "Helpy",
   "version": "0.0.1",
   "identifier": "com.mutasimshatil.helpy",
   "build": {
@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "helpy",
-        "width": 800,
-        "height": 600
+        "title": "Helpy",
+        "width": 1300,
+        "height": 800
       }
     ],
     "security": {
@@ -37,6 +37,9 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "signingIdentity": "-"
+    }
   }
 }
