@@ -3,75 +3,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0.008 326);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0.008 326);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0.008 326);
-  --primary: oklch(0.852 0.199 91.936);
-  --primary-foreground: oklch(0.421 0.095 57.708);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.96 0.003 325.6);
-  --muted-foreground: oklch(0.542 0.034 322.5);
-  --accent: oklch(0.96 0.003 325.6);
-  --accent-foreground: oklch(0.212 0.019 322.12);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0.005 325.62);
-  --input: oklch(0.922 0.005 325.62);
-  --ring: oklch(0.711 0.019 323.02);
-  --chart-1: oklch(0.865 0.012 325.68);
-  --chart-2: oklch(0.542 0.034 322.5);
-  --chart-3: oklch(0.435 0.029 321.78);
-  --chart-4: oklch(0.364 0.029 323.89);
-  --chart-5: oklch(0.263 0.024 320.12);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0.008 326);
-  --sidebar-primary: oklch(0.681 0.162 75.834);
-  --sidebar-primary-foreground: oklch(0.987 0.026 102.212);
-  --sidebar-accent: oklch(0.96 0.003 325.6);
-  --sidebar-accent-foreground: oklch(0.212 0.019 322.12);
-  --sidebar-border: oklch(0.922 0.005 325.62);
-  --sidebar-ring: oklch(0.711 0.019 323.02);
-}
-
-.dark {
-  --background: oklch(0.145 0.008 326);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.212 0.019 322.12);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.212 0.019 322.12);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.795 0.184 86.047);
-  --primary-foreground: oklch(0.421 0.095 57.708);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.263 0.024 320.12);
-  --muted-foreground: oklch(0.711 0.019 323.02);
-  --accent: oklch(0.263 0.024 320.12);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.542 0.034 322.5);
-  --chart-1: oklch(0.865 0.012 325.68);
-  --chart-2: oklch(0.542 0.034 322.5);
-  --chart-3: oklch(0.435 0.029 321.78);
-  --chart-4: oklch(0.364 0.029 323.89);
-  --chart-5: oklch(0.263 0.024 320.12);
-  --sidebar: oklch(0.212 0.019 322.12);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.795 0.184 86.047);
-  --sidebar-primary-foreground: oklch(0.987 0.026 102.212);
-  --sidebar-accent: oklch(0.263 0.024 320.12);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.542 0.034 322.5);
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -95,16 +26,11 @@
   --color-accent-foreground: var(--accent-foreground);
 
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
 
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
 
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -119,4 +45,169 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+}
+
+/*
+ * Helpy — Light
+ */
+:root {
+  --radius: 0.75rem;
+
+  --background: #f7faf8;
+  --foreground: #17211b;
+
+  --card: #ffffff;
+  --card-foreground: #17211b;
+
+  --popover: #ffffff;
+  --popover-foreground: #17211b;
+
+  --primary: #2f8f5b;
+  --primary-foreground: #ffffff;
+
+  --secondary: #edf4ef;
+  --secondary-foreground: #23402e;
+
+  --muted: #edf2ee;
+  --muted-foreground: #68756d;
+
+  --accent: #e2f2e7;
+  --accent-foreground: #21633d;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --border: #dce5df;
+  --input: #d5e0d8;
+  --ring: #45a96d;
+
+  --sidebar: #f1f6f3;
+  --sidebar-foreground: #26352c;
+
+  --sidebar-primary: #2f8f5b;
+  --sidebar-primary-foreground: #ffffff;
+
+  --sidebar-accent: #e3eee7;
+  --sidebar-accent-foreground: #1f5b38;
+
+  --sidebar-border: #d9e4dc;
+  --sidebar-ring: #45a96d;
+}
+
+/*
+ * Helpy — Dark
+ */
+.dark {
+  color-scheme: dark;
+
+  /*
+   * Main application
+   */
+  --background: #111413;
+  --foreground: #f0f4f1;
+
+  /*
+   * Cards
+   */
+  --card: #191c1a;
+  --card-foreground: #f0f4f1;
+
+  /*
+   * Dialogs / popovers
+   */
+  --popover: #1c201d;
+  --popover-foreground: #f0f4f1;
+
+  /*
+   * Primary — green
+   */
+  --primary: #50d99a;
+  --primary-foreground: #07150e;
+
+  /*
+   * Secondary — lavender
+   */
+  --secondary: #c0c0ff;
+  --secondary-foreground: #151522;
+
+  /*
+   * Muted surfaces / text
+   */
+  --muted: #202321;
+  --muted-foreground: #929b95;
+
+  /*
+   * Accent
+   */
+  --accent: #1d3026;
+  --accent-foreground: #9aebbd;
+
+  /*
+   * Destructive
+   */
+  --destructive: #ef6461;
+  --destructive-foreground: #ffffff;
+
+  /*
+   * Dark borders
+   */
+  --border: #292d2a;
+  --input: #303631;
+
+  /*
+   * Green focus ring
+   */
+  --ring: #50c989;
+
+  /*
+   * Charts
+   */
+  --chart-1: #50d99a;
+  --chart-2: #c0c0ff;
+  --chart-3: #ffb85c;
+  --chart-4: #72b8ff;
+  --chart-5: #d98cff;
+
+  /*
+   * Sidebar
+   */
+  --sidebar: #0d100f;
+  --sidebar-foreground: #e3e9e5;
+
+  --sidebar-primary: #50d99a;
+  --sidebar-primary-foreground: #07150e;
+
+  --sidebar-accent: #1b211e;
+  --sidebar-accent-foreground: #9aebbd;
+
+  --sidebar-border: #202522;
+  --sidebar-ring: #50c989;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    min-height: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
 }
