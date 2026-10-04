@@ -26,6 +26,7 @@ import {
   formatActivityDate,
   formatActivityFocusTime,
   getActivityCalendar,
+  getActivityCalendarRange,
   getActivityLevel,
   getActivityYears,
   getMonthLabels,
@@ -55,12 +56,20 @@ export function DashboardActivityCalendar({
   const selectedYearNumber =
     selectedYear === 'all' ? undefined : Number(selectedYear);
 
+  const calendarRange = useMemo(
+    () => getActivityCalendarRange(selectedYearNumber),
+    [selectedYearNumber],
+  );
+
   const weeks = useMemo(
     () => getActivityCalendar(history, selectedYearNumber),
     [history, selectedYearNumber],
   );
 
-  const monthLabels = useMemo(() => getMonthLabels(weeks), [weeks]);
+  const monthLabels = useMemo(
+    () => getMonthLabels(weeks, calendarRange.startDate, calendarRange.endDate),
+    [weeks, calendarRange.startDate, calendarRange.endDate],
+  );
 
   const filteredHistory = useMemo(() => {
     if (selectedYearNumber === undefined) {
@@ -151,9 +160,9 @@ export function DashboardActivityCalendar({
                           <TooltipTrigger asChild>
                             <button
                               type='button'
-                              aria-label={`${formatActivityDate(day.date)}: ${
-                                day.completedTasks
-                              } ${
+                              aria-label={`${formatActivityDate(
+                                day.date,
+                              )}: ${day.completedTasks} ${
                                 day.completedTasks === 1 ? 'task' : 'tasks'
                               } completed`}
                               className={[

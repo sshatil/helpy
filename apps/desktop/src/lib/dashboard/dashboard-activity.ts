@@ -6,6 +6,20 @@ export type DailyActivity = {
   focusedMinutes: number;
 };
 
+export type ActivityCalendarDay = {
+  date: string;
+  completedTasks: number;
+  focusedMinutes: number;
+  isCurrentMonth: boolean;
+};
+
+export type ActivityCalendarWeek = ActivityCalendarDay[];
+
+export type ActivityCalendarRange = {
+  startDate: Date;
+  endDate: Date;
+};
+
 function getDateKey(date: string | Date): string {
   const value = typeof date === 'string' ? new Date(date) : date;
 
@@ -34,7 +48,6 @@ function startOfWeek(date: Date): Date {
   const result = new Date(date);
 
   result.setHours(0, 0, 0, 0);
-
   result.setDate(result.getDate() - result.getDay());
 
   return result;
@@ -44,8 +57,15 @@ function endOfWeek(date: Date): Date {
   const result = new Date(date);
 
   result.setHours(0, 0, 0, 0);
-
   result.setDate(result.getDate() + (6 - result.getDay()));
+
+  return result;
+}
+
+function startOfDay(date: Date): Date {
+  const result = new Date(date);
+
+  result.setHours(0, 0, 0, 0);
 
   return result;
 }
@@ -76,45 +96,41 @@ export function getDailyActivity(
   return activity;
 }
 
-export type ActivityCalendarDay = {
-  date: string;
-  completedTasks: number;
-  focusedMinutes: number;
-  isCurrentMonth: boolean;
-};
+/**
+ * Returns the actual date range that the activity calendar represents.
+ *
+ * Recent:
+ * - Last 365 days including today.
+ *
+ * Selected year:
+ * - January 1 through December 31.
+ */
+export function getActivityCalendarRange(year?: number): ActivityCalendarRange {
+  const today = startOfDay(new Date());
 
-export type ActivityCalendarWeek = ActivityCalendarDay[];
+  if (year !== undefined) {
+    return {
+      startDate: new Date(year, 0, 1),
+      endDate: new Date(year, 11, 31),
+    };
+  }
+
+  return {
+    startDate: addDays(today, -364),
+    endDate: today,
+  };
+}
 
 export function getActivityCalendar(
   history: TaskExecutionHistory[],
   year?: number,
 ): ActivityCalendarWeek[] {
-  const today = new Date();
+  const today = startOfDay(new Date());
 
-  today.setHours(0, 0, 0, 0);
+  const { startDate, endDate } = getActivityCalendarRange(year);
 
-  let firstDate: Date;
-  let lastDate: Date;
-
-  if (year !== undefined) {
-    // Year filter selected:
-    // show the complete selected year.
-    firstDate = new Date(year, 0, 1);
-    firstDate.setHours(0, 0, 0, 0);
-
-    lastDate = new Date(year, 11, 31);
-    lastDate.setHours(0, 0, 0, 0);
-  } else {
-    // Default:
-    // preserve the original behavior and show
-    // the last 365 days ending today.
-    firstDate = addDays(today, -364);
-    lastDate = today;
-  }
-
-  const calendarStart = startOfWeek(firstDate);
-
-  const calendarEnd = endOfWeek(lastDate);
+  const calendarStart = startOfWeek(startDate);
+  const calendarEnd = endOfWeek(endDate);
 
   const dailyActivity = getDailyActivity(history);
 
@@ -127,16 +143,17 @@ export function getActivityCalendar(
 
     for (let dayIndex = 0; dayIndex < 7; dayIndex += 1) {
       const dateKey = getDateKey(currentDate);
-
       const activity = dailyActivity.get(dateKey);
+
+      const isInCurrentMonth =
+        currentDate.getMonth() === today.getMonth() &&
+        currentDate.getFullYear() === today.getFullYear();
 
       week.push({
         date: dateKey,
         completedTasks: activity?.completedTasks ?? 0,
         focusedMinutes: activity?.focusedMinutes ?? 0,
-        isCurrentMonth:
-          currentDate.getMonth() === today.getMonth() &&
-          currentDate.getFullYear() === today.getFullYear(),
+        isCurrentMonth: isInCurrentMonth,
       });
 
       currentDate = addDays(currentDate, 1);
@@ -196,7 +213,11 @@ export function formatActivityFocusTime(minutes: number): string {
   return `${hours}h ${remainingMinutes}m`;
 }
 
-export function getMonthLabels(weeks: ActivityCalendarWeek[]): {
+export function getMonthLabels(
+  weeks: ActivityCalendarWeek[],
+  startDate: Date,
+  endDate: Date,
+): {
   label: string;
   column: number;
 }[] {
@@ -209,37 +230,50 @@ export function getMonthLabels(weeks: ActivityCalendarWeek[]): {
     column: number;
   }[] = [];
 
-  const firstDate = getDateFromKey(weeks[0][0].date);
+  const formatter = new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+  });
 
-  const lastWeek = weeks[weeks.length - 1];
+  const displayedMonths = new Set<string>();
 
-  const lastDate = getDateFromKey(lastWeek[lastWeek.length - 1].date);
+  const firstMonth = formatter.format(startDate);
 
-  const cursor = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
+  labels.push({
+    label: firstMonth,
+    column: 0,
+  });
 
-  while (cursor <= lastDate) {
-    const monthStart = new Date(cursor);
+  displayedMonths.add(firstMonth);
 
-    const monthStartKey = getDateKey(monthStart);
+  /*
+   * Start from the following month.
+   */
+  const cursor = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 1);
 
-    let column = -1;
+  while (cursor <= endDate) {
+    const label = formatter.format(cursor);
 
-    for (let weekIndex = 0; weekIndex < weeks.length; weekIndex += 1) {
-      const week = weeks[weekIndex];
+    /*
+     * Don't show the same month name twice.
+     *
+     * This removes the second "Oct" at the end
+     * of the rolling calendar.
+     */
+    if (!displayedMonths.has(label)) {
+      const monthStartKey = getDateKey(cursor);
 
-      if (week.some((day) => day.date === monthStartKey)) {
-        column = weekIndex;
-        break;
+      const column = weeks.findIndex((week) =>
+        week.some((day) => day.date === monthStartKey),
+      );
+
+      if (column !== -1) {
+        labels.push({
+          label,
+          column,
+        });
+
+        displayedMonths.add(label);
       }
-    }
-
-    if (column !== -1) {
-      labels.push({
-        label: new Intl.DateTimeFormat(undefined, {
-          month: 'short',
-        }).format(monthStart),
-        column,
-      });
     }
 
     cursor.setMonth(cursor.getMonth() + 1);
