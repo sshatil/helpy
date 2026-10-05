@@ -6,7 +6,7 @@ import {
   Settings,
   User,
 } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 
 import { Button } from '@repo/ui/components/ui/button';
 import { Separator } from '@repo/ui/components/ui/separator';
@@ -118,9 +118,13 @@ export function AppSidebar() {
 
   return (
     <aside className='bg-background flex h-screen w-64 shrink-0 flex-col border-r'>
-      <div className='flex h-16 items-center px-6'>
-        <span className='text-lg font-semibold'>Productivity</span>
-      </div>
+      <Link to='/'>
+        <div className='flex h-16 items-center gap-2 px-5 py-3'>
+          <img src='./helpy-icon.png' alt='' className='size-10' />
+
+          <h1 className='text-foreground font-medium'>Helpy</h1>
+        </div>
+      </Link>
 
       <Separator />
 
