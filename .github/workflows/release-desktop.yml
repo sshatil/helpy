@@ -40,6 +40,9 @@ jobs:
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
       VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
     steps:
       # Checkout
       - name: Checkout repository
@@ -92,6 +95,16 @@ jobs:
             exit 1
           fi
 
+          if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            echo "Missing TAURI_SIGNING_PRIVATE_KEY GitHub secret."
+            exit 1
+          fi
+
+          if [ -z "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" ]; then
+            echo "Missing TAURI_SIGNING_PRIVATE_KEY_PASSWORD GitHub secret."
+            exit 1
+          fi
+
       # Build and release
       - name: Build and release
         uses: tauri-apps/tauri-action@v1
@@ -101,17 +114,20 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
         with:
           projectPath: apps/desktop
 
           tagName: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
 
-          releaseName: helpy ${{ github.ref_name }}
+          releaseName: Helpy ${{ github.ref_name }}
 
           releaseBody: |
-            ## helpy ${{ github.ref_name }}
+            ## Helpy ${{ github.ref_name }}
 
-            Production desktop release of helpy.
+            Production desktop release of Helpy.
 
             ### Platforms
 
@@ -127,5 +143,8 @@ jobs:
           generateReleaseNotes: true
 
           args: --target ${{ matrix.target }}
+
+          uploadUpdaterJson: true
+          uploadUpdaterSignatures: true
 
           retryAttempts: 2
