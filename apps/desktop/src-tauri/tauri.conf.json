@@ -46,6 +46,7 @@
     ],
     "macOS": {
       "signingIdentity": "-"
-    }
+    },
+    "createUpdaterArtifacts": true
   }
 }
