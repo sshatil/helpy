@@ -10,6 +10,7 @@ import {
 
 import { NotificationSettings } from '../components/settings/notification-settings';
 import { AppearanceSettings } from '../components/settings/appearance-settings';
+import { AppUpdateSection } from '../components/settings/app-update-section';
 
 export default function SettingsPage() {
   return (
@@ -43,6 +44,8 @@ export default function SettingsPage() {
           <NotificationSettings />
 
           <AppearanceSettings />
+
+          <AppUpdateSection />
         </CardContent>
       </Card>
     </div>

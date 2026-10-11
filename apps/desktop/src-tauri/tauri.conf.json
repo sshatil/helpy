@@ -26,6 +26,12 @@
       "desktop": {
         "schemes": ["helpy"]
       }
+    },
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU1OUVFRkU4RDhDREUzODMKUldTRDQ4M1k2TytlNVRObXUzRjh0VmtqN1FoZUJjYTFjQVpIUGxOVStPRnpLd3FjSVhRaVRHQm0K",
+      "endpoints": [
+        "https://github.com/sshatil/helpy/releases/latest/download/latest.json"
+      ]
     }
   },
   "bundle": {
