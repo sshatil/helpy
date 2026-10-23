@@ -18,7 +18,7 @@ export async function checkForAppUpdate(): Promise<AppUpdate | null> {
     return {
       version: update.version,
       date: update.date,
-      body: update.body,
+      // body: update.body,
     };
   } catch (error) {
     console.error('Failed to check for app update:', error);
