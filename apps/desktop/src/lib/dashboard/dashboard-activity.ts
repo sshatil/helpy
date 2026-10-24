@@ -234,50 +234,33 @@ export function getMonthLabels(
     month: 'short',
   });
 
-  const displayedMonths = new Set<string>();
+  let previousMonth = -1;
+  let previousYear = -1;
 
-  const firstMonth = formatter.format(startDate);
+  weeks.forEach((week, weekIndex) => {
+    const visibleDay = week.find((day) => {
+      const date = getDateFromKey(day.date);
+      return date >= startDate && date <= endDate;
+    });
 
-  labels.push({
-    label: firstMonth,
-    column: 0,
-  });
-
-  displayedMonths.add(firstMonth);
-
-  /*
-   * Start from the following month.
-   */
-  const cursor = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 1);
-
-  while (cursor <= endDate) {
-    const label = formatter.format(cursor);
-
-    /*
-     * Don't show the same month name twice.
-     *
-     * This removes the second "Oct" at the end
-     * of the rolling calendar.
-     */
-    if (!displayedMonths.has(label)) {
-      const monthStartKey = getDateKey(cursor);
-
-      const column = weeks.findIndex((week) =>
-        week.some((day) => day.date === monthStartKey),
-      );
-
-      if (column !== -1) {
-        labels.push({
-          label,
-          column,
-        });
-
-        displayedMonths.add(label);
-      }
+    if (!visibleDay) {
+      return;
     }
 
-    cursor.setMonth(cursor.getMonth() + 1);
-  }
+    const date = getDateFromKey(visibleDay.date);
+    const month = date.getMonth();
+    const year = date.getFullYear();
+
+    if (month !== previousMonth || year !== previousYear) {
+      labels.push({
+        label: formatter.format(date),
+        column: weekIndex,
+      });
+
+      previousMonth = month;
+      previousYear = year;
+    }
+  });
 
   return labels;
 }
