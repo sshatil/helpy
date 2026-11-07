@@ -32,7 +32,7 @@ const ACTIVITY_LEVEL_CLASSES = {
   4: 'bg-primary',
 } as const;
 
-function formatFocusTime(minutes: number) {
+function formatFocusTime(minutes: number): string {
   if (minutes < 60) {
     return `${minutes}m`;
   }
@@ -47,7 +47,7 @@ function formatFocusTime(minutes: number) {
   return `${hours}h ${remainingMinutes}m`;
 }
 
-function formatDate(date: string) {
+function formatDate(date: string): string {
   const value = new Date(`${date}T12:00:00`);
 
   if (Number.isNaN(value.getTime())) {
@@ -87,7 +87,9 @@ function getActivityLevel(count: number, maxCount: number): 0 | 1 | 2 | 3 | 4 {
   return 4;
 }
 
-function getActivityWeeks(activity: PublicProfileActivityItem[]) {
+function getActivityWeeks(
+  activity: PublicProfileActivityItem[],
+): ActivityDay[][] {
   const activityMap = new Map(activity.map((item) => [item.date, item]));
 
   const today = new Date();
@@ -96,13 +98,19 @@ function getActivityWeeks(activity: PublicProfileActivityItem[]) {
 
   const dayOfWeek = today.getDay();
 
-  // End on Saturday so the calendar always contains complete weeks.
+  /*
+   * End the calendar on Saturday so every week
+   * always contains Sunday → Saturday.
+   */
   const endDate = new Date(today);
 
   endDate.setDate(endDate.getDate() + (6 - dayOfWeek));
 
-  // Approximately one year of activity.
-  // 52 weeks = 364 days.
+  /*
+   * 52 complete weeks.
+   *
+   * 52 × 7 = 364 days.
+   */
   const startDate = new Date(endDate);
 
   startDate.setDate(startDate.getDate() - 363);
@@ -138,13 +146,20 @@ function getActivityWeeks(activity: PublicProfileActivityItem[]) {
   return weeks;
 }
 
-function getMonthLabels(weeks: ActivityDay[][]) {
+function getMonthLabels(weeks: ActivityDay[][]): {
+  label: string;
+  column: number;
+}[] {
+  if (weeks.length === 0) {
+    return [];
+  }
+
   const labels: {
     label: string;
     column: number;
   }[] = [];
 
-  let previousMonth = -1;
+  let previousMonthKey = '';
 
   weeks.forEach((week, weekIndex) => {
     const firstDay = week[0];
@@ -154,18 +169,21 @@ function getMonthLabels(weeks: ActivityDay[][]) {
     }
 
     const date = new Date(`${firstDay.date}T12:00:00`);
-    const month = date.getMonth();
 
-    if (month !== previousMonth) {
-      labels.push({
-        label: new Intl.DateTimeFormat('en-US', {
-          month: 'short',
-        }).format(date),
-        column: weekIndex,
-      });
+    const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
 
-      previousMonth = month;
+    if (monthKey === previousMonthKey) {
+      return;
     }
+
+    labels.push({
+      label: new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+      }).format(date),
+      column: weekIndex,
+    });
+
+    previousMonthKey = monthKey;
   });
 
   return labels;
@@ -213,7 +231,7 @@ export function PublicProfileActivity({
   );
 
   return (
-    <Card>
+    <Card className='overflow-hidden'>
       <CardHeader>
         <div className='flex items-start justify-between gap-4'>
           <div className='min-w-0'>
@@ -229,86 +247,87 @@ export function PublicProfileActivity({
       </CardHeader>
 
       <CardContent>
-        <div className='overflow-x-auto pb-2'>
-          <div className='min-w-[620px]'>
-            {/* Month labels */}
-            <div className='relative mb-1 h-5'>
-              {monthLabels.map((month) => (
-                <div
-                  key={`${month.label}-${month.column}`}
-                  className='text-muted-foreground absolute top-0 text-xs whitespace-nowrap'
-                  style={{
-                    left:
-                      weeks.length > 0
-                        ? `${(month.column / weeks.length) * 100}%`
-                        : '0%',
-                  }}
-                >
-                  {month.label}
+        <div className='w-full'>
+          {/* Month labels */}
+          <div className='relative mb-2 h-5 w-full'>
+            {monthLabels.map((month) => (
+              <div
+                key={`${month.label}-${month.column}`}
+                className='text-muted-foreground absolute top-0 text-xs whitespace-nowrap'
+                style={{
+                  left:
+                    weeks.length > 0
+                      ? `${(month.column / weeks.length) * 100}%`
+                      : '0%',
+                }}
+              >
+                {month.label}
+              </div>
+            ))}
+          </div>
+
+          <TooltipProvider>
+            <div
+              className='grid w-full gap-x-1'
+              style={{
+                gridTemplateColumns: `repeat(${weeks.length}, minmax(0, 1fr))`,
+              }}
+            >
+              {weeks.map((week, weekIndex) => (
+                <div key={weekIndex} className='grid min-w-0 grid-rows-7 gap-1'>
+                  {week.map((day) => {
+                    const level = getActivityLevel(day.count, maxCount);
+
+                    const label =
+                      day.count === 0
+                        ? `${formatDate(day.date)}: no completed tasks`
+                        : `${formatDate(day.date)}: ${day.count} completed ${
+                            day.count === 1 ? 'task' : 'tasks'
+                          }`;
+
+                    return (
+                      <Tooltip key={day.date}>
+                        <TooltipTrigger asChild>
+                          <button
+                            type='button'
+                            aria-label={`${label} · ${formatFocusTime(
+                              day.minutes,
+                            )} focused`}
+                            className={[
+                              'mx-auto aspect-square w-full max-w-4 rounded-[2px]',
+                              'transition-opacity',
+                              'hover:ring-ring hover:ring-2 hover:ring-offset-1',
+                              ACTIVITY_LEVEL_CLASSES[level],
+                            ].join(' ')}
+                          />
+                        </TooltipTrigger>
+
+                        <TooltipContent>
+                          <div className='space-y-1'>
+                            <p className='font-medium'>
+                              {formatDate(day.date)}
+                            </p>
+
+                            <p className='text-xs'>
+                              {day.count} {day.count === 1 ? 'task' : 'tasks'}{' '}
+                              completed
+                            </p>
+
+                            <p className='text-muted-foreground text-xs'>
+                              {formatFocusTime(day.minutes)} focused
+                            </p>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
                 </div>
               ))}
             </div>
-
-            <TooltipProvider>
-              <div className='flex w-full gap-1 px-2'>
-                {weeks.map((week, weekIndex) => (
-                  <div
-                    key={weekIndex}
-                    className='grid min-w-0 flex-1 grid-rows-7 gap-1'
-                  >
-                    {week.map((day) => {
-                      const level = getActivityLevel(day.count, maxCount);
-
-                      const label =
-                        day.count === 0
-                          ? `${formatDate(day.date)}: no completed tasks`
-                          : `${formatDate(day.date)}: ${day.count} completed ${
-                              day.count === 1 ? 'task' : 'tasks'
-                            }`;
-
-                      return (
-                        <Tooltip key={day.date}>
-                          <TooltipTrigger asChild>
-                            <button
-                              type='button'
-                              aria-label={`${label} · ${formatFocusTime(
-                                day.minutes,
-                              )} focused`}
-                              className={[
-                                'mx-auto aspect-square w-full max-w-4 rounded-[2px]',
-                                'transition-opacity',
-                                'hover:ring-ring hover:ring-2 hover:ring-offset-1',
-                                ACTIVITY_LEVEL_CLASSES[level],
-                              ].join(' ')}
-                            />
-                          </TooltipTrigger>
-
-                          <TooltipContent>
-                            <div className='space-y-1'>
-                              <p className='font-medium'>
-                                {formatDate(day.date)}
-                              </p>
-
-                              <p className='text-xs'>
-                                {day.count} {day.count === 1 ? 'task' : 'tasks'}{' '}
-                                completed
-                              </p>
-
-                              <p className='text-muted-foreground text-xs'>
-                                {formatFocusTime(day.minutes)} focused
-                              </p>
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-            </TooltipProvider>
-          </div>
+          </TooltipProvider>
         </div>
 
+        {/* Activity summary */}
         <div className='mt-6 flex flex-col gap-4 border-t pt-4 sm:flex-row sm:items-center sm:justify-between'>
           <p className='text-muted-foreground text-sm'>
             {totalCompletedTasks} {totalCompletedTasks === 1 ? 'task' : 'tasks'}{' '}
