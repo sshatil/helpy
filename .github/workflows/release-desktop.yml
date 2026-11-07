@@ -164,7 +164,7 @@ jobs:
             Download the installer for your platform from the assets below.
 
           # Release settings
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
 
           # section based on commits and pull requests.
