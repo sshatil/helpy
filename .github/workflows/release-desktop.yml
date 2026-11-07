@@ -8,6 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
+        description: 'Release tag'
         required: true
         type: string
 
@@ -15,7 +16,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: desktop-release-${{ github.ref }}
+  group: desktop-release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -26,10 +27,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Windows
           - name: Windows x64
             platform: windows-latest
             target: x86_64-pc-windows-msvc
 
+          # macOS Apple Silicon
           - name: macOS Apple Silicon
             platform: macos-latest
             target: aarch64-apple-darwin
@@ -48,29 +51,50 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
           fetch-depth: 0
 
-      # pnpm
+      # Resolve release tag
+      - name: Resolve release tag
+        id: release
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid release tag: $TAG"
+            echo "Expected format: v1.2.3"
+            exit 1
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      # Setup pnpm
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 11.25.0
           run_install: false
 
-      # Node.js
+      # Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
 
-      # Rust
+      # Setup Rust
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
-      # Rust cache
+      # Cache Rust
       - name: Cache Rust
         uses: swatinem/rust-cache@v2
         with:
@@ -105,7 +129,7 @@ jobs:
             exit 1
           fi
 
-      # Build and release
+      # Build and create GitHub release
       - name: Build and release
         uses: tauri-apps/tauri-action@v1
         env:
@@ -120,12 +144,13 @@ jobs:
         with:
           projectPath: apps/desktop
 
-          tagName: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          # Release information
+          tagName: ${{ steps.release.outputs.tag }}
 
-          releaseName: Helpy ${{ github.ref_name }}
+          releaseName: Helpy ${{ steps.release.outputs.tag }}
 
           releaseBody: |
-            ## Helpy ${{ github.ref_name }}
+            ## Helpy ${{ steps.release.outputs.tag }}
 
             Production desktop release of Helpy.
 
@@ -138,13 +163,19 @@ jobs:
 
             Download the installer for your platform from the assets below.
 
-          releaseDraft: false
+          # Release settings
+          releaseDraft: true
           prerelease: false
+
+          # section based on commits and pull requests.
           generateReleaseNotes: true
 
+          # Tauri build
           args: --target ${{ matrix.target }}
 
+          # Tauri updater
           uploadUpdaterJson: true
           uploadUpdaterSignatures: true
 
+          # Retry failed uploads/build release operations.
           retryAttempts: 2
