@@ -29,7 +29,6 @@ export function TaskList({
   const isFirstTask = index === 0;
   const isLastTask = index === tasks.length - 1;
 
-  const previousTask = tasks[index - 1];
   const nextTask = tasks[index + 1];
 
   const canMoveUp = !isFirstTask && !task.completed;
@@ -42,30 +41,40 @@ export function TaskList({
 
   return (
     <div className='flex items-start gap-4'>
-      <div className='bg-muted flex size-8 shrink-0 items-center justify-center rounded-md text-sm font-medium'>
+      <div
+        className={cn(
+          'flex size-8 shrink-0 items-center justify-center rounded-md text-sm font-medium',
+          task.completed
+            ? 'bg-muted text-muted-foreground'
+            : 'bg-border text-foreground',
+          task.status === 'running' && 'bg-green-500 text-white',
+          task.status === 'paused' && 'bg-yellow-500 text-white',
+        )}
+      >
         {index + 1}
       </div>
 
       <div
         className={cn(
           'min-w-0 flex-1 rounded-xl border p-4',
-          task.completed && 'bg-muted',
+          task.completed ? 'border-muted bg-muted/50' : 'border-border',
+          task.status === 'running' && 'border-green-500',
+          task.status === 'paused' && 'border-yellow-500',
         )}
       >
         <div className='flex flex-wrap items-center gap-2'>
           <h3
-            className={
-              task.completed
-                ? 'text-muted-foreground font-medium line-through'
-                : 'font-medium'
-            }
+            className={cn(
+              'font-medium',
+              task.completed && 'text-muted-foreground line-through',
+            )}
           >
             {task.title}
           </h3>
 
           <Badge variant='secondary'>{task.duration} min</Badge>
 
-          {task.completed && <Badge>Completed</Badge>}
+          {task.completed && <Badge variant='secondary'>Completed</Badge>}
 
           {task.status === 'running' && <Badge>Running</Badge>}
 
@@ -93,13 +102,20 @@ export function TaskList({
         )}
 
         <div className='mt-4 flex flex-wrap gap-2'>
-          <Button
-            size='sm'
-            variant={task.completed ? 'outline' : 'secondary'}
-            onClick={onToggleComplete}
-          >
-            {task.completed ? 'Mark Incomplete' : 'Mark Complete'}
-          </Button>
+          {task.completed ? (
+            <Button
+              size='sm'
+              variant='outline'
+              onClick={onToggleComplete}
+              className='text-muted-foreground'
+            >
+              Mark Incomplete
+            </Button>
+          ) : (
+            <Button size='sm' variant='secondary' onClick={onToggleComplete}>
+              Mark Complete
+            </Button>
+          )}
 
           <EditTaskDialog task={task} onUpdate={updateTask} />
 
