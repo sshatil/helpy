@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@repo/ui/components/ui/card';
+
 import {
   Select,
   SelectContent,
@@ -15,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@repo/ui/components/ui/select';
+
 import {
   Tooltip,
   TooltipContent,
@@ -26,7 +28,6 @@ import {
   formatActivityDate,
   formatActivityFocusTime,
   getActivityCalendar,
-  getActivityCalendarRange,
   getActivityLevel,
   getActivityYears,
   getMonthLabels,
@@ -56,26 +57,38 @@ export function DashboardActivityCalendar({
   const selectedYearNumber =
     selectedYear === 'all' ? undefined : Number(selectedYear);
 
-  const calendarRange = useMemo(
-    () => getActivityCalendarRange(selectedYearNumber),
-    [selectedYearNumber],
-  );
-
   const weeks = useMemo(
     () => getActivityCalendar(history, selectedYearNumber),
     [history, selectedYearNumber],
   );
 
-  const monthLabels = useMemo(
-    () => getMonthLabels(weeks, calendarRange.startDate, calendarRange.endDate),
-    [weeks, calendarRange.startDate, calendarRange.endDate],
-  );
+  const monthLabels = useMemo(() => getMonthLabels(weeks), [weeks]);
 
   const filteredHistory = useMemo(() => {
     if (selectedYearNumber === undefined) {
-      return history;
+      /*
+       * Recent mode.
+       *
+       * Only include the last 365 days.
+       */
+      const today = new Date();
+
+      today.setHours(0, 0, 0, 0);
+
+      const firstDate = new Date(today);
+
+      firstDate.setDate(firstDate.getDate() - 364);
+
+      return history.filter((item) => {
+        const date = new Date(item.completedAt);
+
+        return date >= firstDate && date <= today;
+      });
     }
 
+    /*
+     * Selected year.
+     */
     return history.filter(
       (item) => new Date(item.completedAt).getFullYear() === selectedYearNumber,
     );
@@ -150,9 +163,19 @@ export function DashboardActivityCalendar({
                 {weeks.map((week, weekIndex) => (
                   <div
                     key={weekIndex}
-                    className='grid min-w-0 flex-1 grid-rows-7 gap-1'
+                    className='flex min-w-0 flex-1 flex-col gap-1'
                   >
                     {week.map((day) => {
+                      /*
+                       * Every day in this calendar is already
+                       * inside the actual range.
+                       *
+                       * We still keep this check as a safeguard.
+                       */
+                      if (!day.isInRange) {
+                        return null;
+                      }
+
                       const level = getActivityLevel(day.completedTasks);
 
                       return (
@@ -160,9 +183,9 @@ export function DashboardActivityCalendar({
                           <TooltipTrigger asChild>
                             <button
                               type='button'
-                              aria-label={`${formatActivityDate(
-                                day.date,
-                              )}: ${day.completedTasks} ${
+                              aria-label={`${formatActivityDate(day.date)}: ${
+                                day.completedTasks
+                              } ${
                                 day.completedTasks === 1 ? 'task' : 'tasks'
                               } completed`}
                               className={[
