@@ -165,7 +165,7 @@ export default function PlanDetailsPage() {
           </div>
 
           {plan.description && (
-            <p className='text-muted-foreground mt-2 max-w-3xl'>
+            <p className='text-muted-foreground mt-2 max-w-3xl whitespace-pre-line'>
               {plan.description}
             </p>
           )}
