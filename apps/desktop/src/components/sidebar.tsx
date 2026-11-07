@@ -7,6 +7,7 @@ import {
   PanelLeftOpen,
   Settings,
   User,
+  Headphones,
 } from 'lucide-react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 
@@ -17,6 +18,11 @@ import {
   AvatarFallback,
   AvatarImage,
 } from '@repo/ui/components/ui/avatar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@repo/ui/components/ui/popover';
 
 import { FocusAudioPlayer } from './focus-audio/focus-audio-player';
 
@@ -114,6 +120,7 @@ export function AppSidebar() {
 
   const username = profile?.username;
   const avatarUrl = profile?.avatarUrl || user?.user_metadata?.avatar_url;
+
   const initials = getInitials(displayName || user?.email || 'Helpy User');
 
   return (
@@ -162,6 +169,7 @@ export function AppSidebar() {
           )}
         </div>
 
+        {/* Expand button */}
         {collapsed && (
           <div className='flex h-9 items-center justify-center'>
             <Button
@@ -183,7 +191,9 @@ export function AppSidebar() {
 
       {/* Main navigation */}
       <div
-        className={`flex min-h-0 flex-1 flex-col py-4 ${collapsed ? 'px-2' : 'px-3'}`}
+        className={`flex min-h-0 flex-1 flex-col py-4 ${
+          collapsed ? 'px-2' : 'px-3'
+        }`}
       >
         <nav className='space-y-1'>
           {mainNavigation.map((item) => (
@@ -193,15 +203,41 @@ export function AppSidebar() {
 
         {/* Bottom section */}
         <div className='mt-auto'>
-          {!collapsed && (
-            <>
-              <Separator className='mb-3' />
+          <Separator className='my-3' />
 
-              <div className='mb-4'>
-                <FocusAudioPlayer />
-              </div>
-            </>
-          )}
+          {/* Focus Music */}
+          <div className={collapsed ? 'flex justify-center' : 'mb-4'}>
+            {collapsed ? (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='icon'
+                    title='Focus Music'
+                    aria-label='Open focus music controls'
+                    className='size-10'
+                  >
+                    <Headphones className='size-5' />
+                  </Button>
+                </PopoverTrigger>
+
+                <PopoverContent side='right' align='end' className='w-72'>
+                  <div className='mb-3'>
+                    <p className='text-sm font-semibold'>Focus Music</p>
+
+                    <p className='text-muted-foreground text-xs'>
+                      Your focus soundtrack
+                    </p>
+                  </div>
+
+                  <FocusAudioPlayer />
+                </PopoverContent>
+              </Popover>
+            ) : (
+              <FocusAudioPlayer />
+            )}
+          </div>
 
           <Separator className='my-3' />
 
@@ -216,6 +252,7 @@ export function AppSidebar() {
           >
             <Avatar className='size-8 shrink-0'>
               <AvatarImage src={avatarUrl} alt={displayName} />
+
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
 
