@@ -1,4 +1,5 @@
 import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
+import { cn } from 'cn';
 
 import { Badge } from '@repo/ui/components/ui/badge';
 import { Button } from '@repo/ui/components/ui/button';
@@ -11,27 +12,46 @@ type TaskProps = {
   tasks: Task[];
   index: number;
   updateTask: (id: string, data: any) => void;
-  handleMoveTask: (index: number, direction: 'up' | 'down') => void;
+  handleMoveTask: (taskId: string, direction: 'up' | 'down') => void;
   deleteTask: (id: string) => void;
   onToggleComplete: () => void;
 };
 
 export function TaskList({
   task,
+  tasks,
   index,
   updateTask,
   handleMoveTask,
   deleteTask,
-  tasks,
   onToggleComplete,
 }: TaskProps) {
+  const isFirstTask = index === 0;
+  const isLastTask = index === tasks.length - 1;
+
+  const previousTask = tasks[index - 1];
+  const nextTask = tasks[index + 1];
+
+  const canMoveUp = !isFirstTask && !task.completed;
+
+  const canMoveDown =
+    !isLastTask &&
+    !task.completed &&
+    nextTask !== undefined &&
+    !nextTask.completed;
+
   return (
     <div className='flex items-start gap-4'>
       <div className='bg-muted flex size-8 shrink-0 items-center justify-center rounded-md text-sm font-medium'>
         {index + 1}
       </div>
 
-      <div className='min-w-0 flex-1'>
+      <div
+        className={cn(
+          'min-w-0 flex-1 rounded-xl border p-4',
+          task.completed && 'bg-muted',
+        )}
+      >
         <div className='flex flex-wrap items-center gap-2'>
           <h3
             className={
@@ -83,25 +103,29 @@ export function TaskList({
 
           <EditTaskDialog task={task} onUpdate={updateTask} />
 
-          <Button
-            size='sm'
-            variant='ghost'
-            disabled={index === 0}
-            onClick={() => handleMoveTask(index, 'up')}
-          >
-            <ArrowUp className='mr-1 size-4' />
-            Up
-          </Button>
+          {!task.completed && (
+            <>
+              <Button
+                size='sm'
+                variant='ghost'
+                disabled={!canMoveUp}
+                onClick={() => handleMoveTask(task.id, 'up')}
+              >
+                <ArrowUp className='mr-1 size-4' />
+                Up
+              </Button>
 
-          <Button
-            size='sm'
-            variant='ghost'
-            disabled={index === tasks.length - 1}
-            onClick={() => handleMoveTask(index, 'down')}
-          >
-            <ArrowDown className='mr-1 size-4' />
-            Down
-          </Button>
+              <Button
+                size='sm'
+                variant='ghost'
+                disabled={!canMoveDown}
+                onClick={() => handleMoveTask(task.id, 'down')}
+              >
+                <ArrowDown className='mr-1 size-4' />
+                Down
+              </Button>
+            </>
+          )}
 
           <Button
             size='sm'

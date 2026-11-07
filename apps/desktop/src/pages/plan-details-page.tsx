@@ -72,6 +72,11 @@ export default function PlanDetailsPage() {
 
   const completedTasks = tasks.filter((task) => task.completed).length;
 
+  const activeTasks = tasks.filter((task) => !task.completed);
+  const completedTaskList = tasks.filter((task) => task.completed);
+
+  const displayTasks = [...activeTasks, ...completedTaskList];
+
   const completedTask = completedTaskId
     ? tasks.find((task) => task.id === completedTaskId)
     : undefined;
@@ -100,6 +105,7 @@ export default function PlanDetailsPage() {
   }
 
   const selectedPlan = plan.id;
+
   function handleDeletePlan() {
     deletePlan(selectedPlan, {
       onSuccess: () => {
@@ -109,8 +115,14 @@ export default function PlanDetailsPage() {
     });
   }
 
-  function handleMoveTask(taskIndex: number, direction: 'up' | 'down') {
-    const newIndex = direction === 'up' ? taskIndex - 1 : taskIndex + 1;
+  function handleMoveTask(taskId: string, direction: 'up' | 'down') {
+    const currentIndex = tasks.findIndex((task) => task.id === taskId);
+
+    if (currentIndex === -1) {
+      return;
+    }
+
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
 
     if (newIndex < 0 || newIndex >= tasks.length) {
       return;
@@ -118,9 +130,9 @@ export default function PlanDetailsPage() {
 
     const taskIds = tasks.map((task) => task.id);
 
-    [taskIds[taskIndex], taskIds[newIndex]] = [
+    [taskIds[currentIndex], taskIds[newIndex]] = [
       taskIds[newIndex],
-      taskIds[taskIndex],
+      taskIds[currentIndex],
     ];
 
     reorderTasks(taskIds);
@@ -180,6 +192,7 @@ export default function PlanDetailsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Plan Details</CardTitle>
+
           <CardDescription>
             Track your progress through this plan.
           </CardDescription>
@@ -276,18 +289,34 @@ export default function PlanDetailsPage() {
             </div>
           ) : (
             <div className='space-y-6'>
-              {tasks.map((task, index) => (
-                <TaskList
-                  key={task.id}
-                  task={task}
-                  index={index}
-                  tasks={tasks}
-                  updateTask={updateTask}
-                  handleMoveTask={handleMoveTask}
-                  deleteTask={deleteTask}
-                  onToggleComplete={() => handleManualComplete(task)}
-                />
-              ))}
+              {displayTasks.map((task, index) => {
+                const isFirstCompletedTask =
+                  task.completed && !displayTasks[index - 1]?.completed;
+
+                return (
+                  <div key={task.id}>
+                    {isFirstCompletedTask && (
+                      <div className='mb-4 flex items-center gap-3 pt-2'>
+                        <span className='text-muted-foreground text-sm font-medium'>
+                          Completed
+                        </span>
+
+                        <div className='bg-border h-px flex-1' />
+                      </div>
+                    )}
+
+                    <TaskList
+                      task={task}
+                      index={index}
+                      tasks={displayTasks}
+                      updateTask={updateTask}
+                      handleMoveTask={handleMoveTask}
+                      deleteTask={deleteTask}
+                      onToggleComplete={() => handleManualComplete(task)}
+                    />
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>
