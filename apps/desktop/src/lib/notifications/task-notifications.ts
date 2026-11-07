@@ -21,6 +21,7 @@ export async function sendTaskCompletionNotification(taskTitle: string) {
     await sendNotification({
       title: 'Task completed',
       body: `"${taskTitle}" is complete.`,
+      sound: 'default',
     });
   } catch (error) {
     console.error('Failed to send task completion notification:', error);
