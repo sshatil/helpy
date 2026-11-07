@@ -3,7 +3,6 @@ import {
   BookOpen,
   History,
   LayoutDashboard,
-  LogOut,
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
@@ -22,7 +21,6 @@ import {
 import { FocusAudioPlayer } from './focus-audio/focus-audio-player';
 
 import { useAuth } from '../lib/auth/auth-context';
-import { signOut } from '../lib/auth/auth-repository';
 import { useProfile } from '../hooks/use-profile';
 
 const mainNavigation = [
@@ -110,15 +108,6 @@ export function AppSidebar() {
 
   const { user } = useAuth();
   const { data: profile } = useProfile();
-
-  async function handleSignOut() {
-    try {
-      await signOut();
-      navigate('/login', { replace: true });
-    } catch (error) {
-      console.error('Failed to sign out:', error);
-    }
-  }
 
   const displayName =
     profile?.displayName || user?.user_metadata?.full_name || 'Helpy User';
@@ -228,21 +217,6 @@ export function AppSidebar() {
               </div>
             )}
           </button>
-
-          {/* Sign out */}
-          <Button
-            type='button'
-            variant='ghost'
-            title={collapsed ? 'Sign out' : undefined}
-            className={`text-muted-foreground hover:text-foreground mt-1 w-full ${
-              collapsed ? 'justify-center px-0' : 'justify-start gap-3'
-            }`}
-            onClick={handleSignOut}
-          >
-            <LogOut className='size-4 shrink-0' />
-
-            {!collapsed && <span>Sign out</span>}
-          </Button>
         </div>
       </div>
     </aside>

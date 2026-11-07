@@ -15,6 +15,8 @@ import { useAuth } from '../lib/auth/auth-context';
 import { ProfileForm } from '../components/profile/profile-form';
 import { ProfileHeader } from '../components/profile/profile-header';
 import { Button } from '@repo/ui/components/ui/button';
+import { signOut } from '../lib/auth/auth-repository';
+import { LogOut } from 'lucide-react';
 
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) {
@@ -39,6 +41,15 @@ export default function ProfilePage() {
     bio: string;
   }) {
     updateProfile.mutate(data);
+  }
+
+  async function handleSignOut() {
+    try {
+      await signOut();
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.error('Failed to sign out:', error);
+    }
   }
 
   if (isLoading) {
@@ -118,6 +129,18 @@ export default function ProfilePage() {
           />
         </CardContent>
       </Card>
+      {/* Sign out */}
+      <Button
+        type='button'
+        variant='outline'
+        title={'Sign out'}
+        className={`mt-4 w-full`}
+        onClick={handleSignOut}
+      >
+        <LogOut className='size-4 shrink-0' />
+
+        <span>Sign out</span>
+      </Button>
     </div>
   );
 }
