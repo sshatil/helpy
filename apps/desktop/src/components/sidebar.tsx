@@ -123,48 +123,60 @@ export function AppSidebar() {
       }`}
     >
       {/* Header */}
-      <div
-        className={`relative flex h-16 shrink-0 items-center ${
-          collapsed ? 'justify-center px-1' : 'justify-between px-4'
-        }`}
-      >
-        <Link
-          to='/'
-          title='Helpy'
-          className={`flex min-w-0 items-center ${
-            collapsed ? 'justify-center' : 'gap-2'
+      <div className='flex shrink-0 flex-col'>
+        <div
+          className={`flex h-16 items-center ${
+            collapsed ? 'justify-center' : 'justify-between px-4'
           }`}
         >
-          <img
-            src='./helpy-icon.png'
-            alt=''
-            className='size-10 shrink-0 object-contain'
-          />
+          <Link
+            to='/'
+            title='Helpy'
+            className={`flex min-w-0 items-center ${
+              collapsed ? 'justify-center' : 'gap-2'
+            }`}
+          >
+            <img
+              src='./helpy-icon.png'
+              alt='Helpy'
+              className='size-9 shrink-0 object-contain'
+            />
+
+            {!collapsed && (
+              <h1 className='text-foreground truncate font-semibold'>Helpy</h1>
+            )}
+          </Link>
 
           {!collapsed && (
-            <h1 className='text-foreground truncate font-medium'>Helpy</h1>
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon'
+              onClick={() => setCollapsed(true)}
+              title='Collapse sidebar'
+              aria-label='Collapse sidebar'
+              className='size-8 shrink-0'
+            >
+              <PanelLeftClose className='size-4' />
+            </Button>
           )}
-        </Link>
+        </div>
 
-        <Button
-          type='button'
-          variant='ghost'
-          size='icon'
-          onClick={() => setCollapsed((previous) => !previous)}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className={
-            collapsed
-              ? 'bg-background absolute top-1 -right-7 z-10 size-6'
-              : 'size-8 shrink-0'
-          }
-        >
-          {collapsed ? (
-            <PanelLeftOpen className='size-4' />
-          ) : (
-            <PanelLeftClose className='size-4' />
-          )}
-        </Button>
+        {collapsed && (
+          <div className='flex h-9 items-center justify-center'>
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon'
+              onClick={() => setCollapsed(false)}
+              title='Expand sidebar'
+              aria-label='Expand sidebar'
+              className='size-8'
+            >
+              <PanelLeftOpen className='size-4' />
+            </Button>
+          </div>
+        )}
       </div>
 
       <Separator />
