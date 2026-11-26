@@ -82,7 +82,9 @@ export function TaskList({
         </div>
 
         {task.notes && (
-          <p className='text-muted-foreground mt-2 text-sm'>{task.notes}</p>
+          <p className='text-muted-foreground mt-2 text-sm whitespace-pre-line'>
+            {task.notes}
+          </p>
         )}
 
         {task.links.length > 0 && (
